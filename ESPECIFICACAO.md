@@ -6,7 +6,8 @@
 > Origem histórica: [`PROJETO_CATALOGO.md`](PROJETO_CATALOGO.md) — briefing do antigo
 > Projeto Gálice, de onde este catálogo nasceu. Vale como contexto, não como regra.
 >
-> Última revisão: 2026-09-12
+> **No ar:** https://gbrcmg.github.io/favna3d-catalogo/
+> Repositório: `gbrcmg/favna3d-catalogo` · Última revisão: 2026-09-12
 
 ## Como ler o status
 
@@ -138,8 +139,9 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 
 | ID | Requisito | Status |
 |---|---|---|
-| REQ-60 | `catalogo/` é repositório git próprio, com `.gitignore`, publicado no GitHub Pages | ⬜ |
-| REQ-61 | `og:image` é uma imagem dedicada de 1200×630, não o recorte de uma foto de produto | ⬜ |
+| REQ-60 | `catalogo/` é repositório git próprio, com `.gitignore`, publicado no GitHub Pages | ✅ |
+| REQ-61 | `og:image` é uma imagem dedicada de 1200×630, não o recorte de uma foto de produto | ✅ |
+| REQ-64 | `og:url` e `og:image` são absolutas — o WhatsApp não resolve caminho relativo na prévia | ✅ |
 | REQ-62 | O README permite adicionar uma peça nova sem ajuda de desenvolvedor | 🟡 |
 | REQ-63 | Confirmado que o `fetch` do CSV publicado funciona a partir do GitHub Pages (CORS). Não funcionando, usar `gviz/tq?tqx=out:csv&sheet=Catalogo` e registrar a escolha aqui | 🔒 |
 
@@ -243,6 +245,6 @@ locais, mas **não deve ir para o GitHub Pages**.
 |---|---|---|
 | 1 | Base local: estrutura, config, CSVs, grade, filtro, busca, detalhe, WhatsApp | ✅ concluída |
 | 1.5 | **Spec como fonte da verdade + critérios executáveis** (REQ-71) | 🚧 em curso |
-| 2 | Planilha real: CSV publicado, dados de verdade, queda de conexão, fotos do Drive | 🔒 pendência 2 |
-| 3 | **Publicação: repo próprio, GitHub Pages, og:image** (REQ-60, REQ-61) | 🚧 em curso |
+| 2 | **POC ponta a ponta: planilha real, CSV publicado, queda de conexão** | 🚧 falta a planilha |
+| 3 | Publicação: repo próprio, GitHub Pages, og:image | ✅ no ar |
 | 4 | Só se pedido: QR code para as parceiras, pedido multi-item, domínio próprio | ⬜ |

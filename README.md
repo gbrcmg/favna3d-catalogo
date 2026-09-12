@@ -1,5 +1,7 @@
 # Catálogo FAVNA 3D
 
+**No ar: https://gbrcmg.github.io/favna3d-catalogo/**
+
 Uma página pública que mostra as peças e leva o cliente pro WhatsApp.
 O conteúdo vem de uma planilha do Google — **mexer na planilha é suficiente
 para mudar o site**, sem tocar em código.
