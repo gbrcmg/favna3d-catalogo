@@ -1,0 +1,53 @@
+# ============================================================
+# Este repositório é PÚBLICO (GitHub Pages).
+# ESPECIFICACAO.md REQ-10 e REQ-12: nada de custo, margem, lucro,
+# cliente, caixa, credencial ou link de modelo pode entrar aqui.
+# Na dúvida, não commite.
+# ============================================================
+
+# --- credenciais e segredos: nunca, em nenhuma forma ---
+*cookie*
+*token*
+*secret*
+*credential*
+.env
+.env.*
+*.pem
+*.key
+service_account*.json
+accounts.json
+
+# --- planilhas e dados de gestão (têm custo, margem, cliente) ---
+*.xlsx
+*.xls
+*.ods
+Favna_Planilha*
+*custeio*
+*estimativas*
+
+# --- modelos 3D: acervo pago, não é nosso para redistribuir ---
+*.stl
+*.3mf
+*.gcode
+*.step
+
+# --- capturas de tela e arquivos de teste que eu gero ao revisar ---
+_teste-*.png
+_v[0-9]*.png
+_diag.*
+_contato.png
+
+# --- sistema operacional e editores ---
+.DS_Store
+._*
+Thumbs.db
+*.swp
+*.code-workspace
+.vscode/
+.idea/
+
+# --- caso alguém instale algo aqui: o site não tem build ---
+node_modules/
+package-lock.json
+__pycache__/
+*.pyc

@@ -1,0 +1,375 @@
+/* ============================================================
+   FAVNA 3D — Catálogo · testes das regras de negócio
+   ------------------------------------------------------------
+   Rodar:  node --test testes/
+   Sem npm, sem dependência: usa o test runner embutido do Node.
+
+   Cada teste cita o requisito da ESPECIFICACAO.md que ele prova.
+   Teste que não prova requisito nenhum não deveria existir aqui.
+   ============================================================ */
+
+'use strict';
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const R = require('../js/regras.js');
+
+/** O Intl usa espaço não-quebrável entre "R$" e o número. */
+const semNbsp = (s) => s.replace(/ /g, ' ');
+
+/* ============================================================
+   REQ-05 — campos SIM/NÃO
+   ============================================================ */
+
+test('REQ-05: aceita as várias formas de "sim" da planilha', () => {
+  ['SIM', 'sim', 'Sim', ' sim ', 'S', 's', 'TRUE', 'true',
+   'VERDADEIRO', 'verdadeiro', '1'].forEach((v) => {
+    assert.equal(R.ehSim(v), true, `"${v}" deveria ser verdadeiro`);
+  });
+});
+
+test('REQ-05: qualquer outra coisa é falso', () => {
+  ['NÃO', 'NAO', 'nao', 'n', 'FALSE', '0', '', '   ', null, undefined, 'talvez']
+    .forEach((v) => {
+      assert.equal(R.ehSim(v), false, `"${v}" deveria ser falso`);
+    });
+});
+
+/* ============================================================
+   REQ-06 — leitura de preço. O requisito mais perigoso do projeto:
+   a conta Google desta casa usa vírgula decimal.
+   ============================================================ */
+
+test('REQ-06: vírgula e ponto decimais chegam ao mesmo número', () => {
+  assert.equal(R.leNumero('35,90'), 35.9);
+  assert.equal(R.leNumero('35.90'), 35.9);
+  assert.equal(R.leNumero('0,16'), 0.16);
+  assert.equal(R.leNumero('0.16'), 0.16);
+});
+
+test('REQ-06: aceita as formas que aparecem na planilha', () => {
+  assert.equal(R.leNumero(35), 35);
+  assert.equal(R.leNumero('35'), 35);
+  assert.equal(R.leNumero('35,00'), 35);
+  assert.equal(R.leNumero('R$ 35,00'), 35);
+  assert.equal(R.leNumero('r$35'), 35);
+  assert.equal(R.leNumero(' 90 '), 90);
+});
+
+test('REQ-06: ponto como separador de milhar', () => {
+  assert.equal(R.leNumero('R$ 1.250,00'), 1250);
+  assert.equal(R.leNumero('1.250'), 1250);       // 3 dígitos após o ponto = milhar
+  assert.equal(R.leNumero('1.250.000'), 1250000);
+});
+
+test('REQ-06: sem número devolve null, não zero', () => {
+  // null tem que ser diferente de 0: 0 significaria "de graça".
+  [null, undefined, '', '   ', 'sob consulta', 'R$', 'abc'].forEach((v) => {
+    assert.equal(R.leNumero(v), null, `"${v}" deveria ser null`);
+  });
+});
+
+test('REQ-06/REQ-29: preço vazio vira "Preço sob consulta"', () => {
+  assert.equal(R.formataPreco(''), 'Preço sob consulta');
+  assert.equal(R.formataPreco(null), 'Preço sob consulta');
+  assert.equal(R.formataPreco('combinar'), 'Preço sob consulta');
+});
+
+test('REQ-29: preço sai formatado em real brasileiro', () => {
+  assert.equal(semNbsp(R.formataPreco(90)), 'R$ 90,00');
+  assert.equal(semNbsp(R.formataPreco('95')), 'R$ 95,00');
+  assert.equal(semNbsp(R.formataPreco('35,90')), 'R$ 35,90');
+  assert.equal(semNbsp(R.formataPreco('1250')), 'R$ 1.250,00');
+});
+
+/* ============================================================
+   REQ-24 — busca sem acento e sem caixa
+   ============================================================ */
+
+test('REQ-24: "cachepo" encontra "Cachepô"', () => {
+  assert.equal(R.normaliza('Cachepô'), 'cachepo');
+  assert.equal(R.normaliza('PORTA-PINCÉIS GEO'), 'porta-pinceis geo');
+  assert.equal(R.normaliza('  Óculos  '), 'oculos');
+  assert.equal(R.normaliza('Sandália'), 'sandalia');
+});
+
+/* ============================================================
+   REQ-08 — listas de fotos e cores
+   ============================================================ */
+
+test('REQ-08: fotos separadas por barra vertical, cores por ponto-e-vírgula', () => {
+  assert.deepEqual(R.separaLista('a.jpg|b.jpg|c.jpg', '|'), ['a.jpg', 'b.jpg', 'c.jpg']);
+  assert.deepEqual(R.separaLista('Creme; Terracota', ';'), ['Creme', 'Terracota']);
+});
+
+test('REQ-08: espaços e itens vazios são descartados', () => {
+  assert.deepEqual(R.separaLista(' a.jpg | b.jpg ', '|'), ['a.jpg', 'b.jpg']);
+  assert.deepEqual(R.separaLista('a.jpg||b.jpg', '|'), ['a.jpg', 'b.jpg']);
+  assert.deepEqual(R.separaLista('', '|'), []);
+  assert.deepEqual(R.separaLista(null, ';'), []);
+});
+
+/* ============================================================
+   REQ-26 — fotos: relativo, URL e Google Drive
+   ============================================================ */
+
+test('REQ-26: caminho relativo e URL completa passam intactos', () => {
+  assert.equal(R.resolveFoto('fotos/vaso.jpg'), 'fotos/vaso.jpg');
+  assert.equal(R.resolveFoto(' fotos/vaso.jpg '), 'fotos/vaso.jpg');
+  assert.equal(R.resolveFoto('https://exemplo.com/v.jpg'), 'https://exemplo.com/v.jpg');
+  assert.equal(R.resolveFoto(''), '');
+});
+
+test('REQ-26: link do Drive vira URL de thumbnail', () => {
+  const id = '1x4H26T2HGiERUqzXMrmBWC_MdacChpVu';
+  const esperado = `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
+  assert.equal(R.resolveFoto(`https://drive.google.com/file/d/${id}/view?usp=sharing`), esperado);
+  assert.equal(R.resolveFoto(`https://drive.google.com/open?id=${id}`), esperado);
+  assert.equal(R.resolveFoto(`https://drive.google.com/uc?id=${id}`), esperado);
+});
+
+/* ============================================================
+   REQ-04 / REQ-07 — leitura tolerante das linhas
+   ============================================================ */
+
+test('REQ-04: linha sem id ou sem nome é descartada', () => {
+  assert.equal(R.montaProduto({ id: '', nome: 'Vaso' }), null);
+  assert.equal(R.montaProduto({ id: 'vaso', nome: '' }), null);
+  assert.equal(R.montaProduto({ id: '  ', nome: '  ' }), null);
+  assert.equal(R.montaProduto({}), null);
+});
+
+test('REQ-07: espaços em volta dos valores são aparados', () => {
+  const p = R.montaProduto({
+    id: ' vaso-01 ', nome: ' Vaso Ritmo ', categoria: ' Vasos ',
+    ativo: ' SIM ', preco: ' 90 ',
+  });
+  assert.equal(p.id, 'vaso-01');
+  assert.equal(p.nome, 'Vaso Ritmo');
+  assert.equal(p.categoria, 'Vasos');
+  assert.equal(p.ativo, true);
+});
+
+test('REQ-04: categoria vazia cai em "Outros" em vez de ficar sem filtro', () => {
+  assert.equal(R.montaProduto({ id: 'x', nome: 'X' }).categoria, 'Outros');
+});
+
+test('REQ-04: uma linha ruim não derruba o catálogo', () => {
+  const catalogo = R.montaCatalogo([
+    { id: 'bom-1', nome: 'Bom 1', ativo: 'SIM', ordem: '1' },
+    { id: '', nome: 'Sem id', ativo: 'SIM' },
+    { nome: 'Sem id nenhum', ativo: 'SIM' },
+    { id: 'bom-2', nome: 'Bom 2', ativo: 'SIM', ordem: '2' },
+  ]);
+  assert.deepEqual(catalogo.map((p) => p.id), ['bom-1', 'bom-2']);
+});
+
+/* ============================================================
+   REQ-02 — só peças ativas
+   ============================================================ */
+
+test('REQ-02: ativo=NÃO fica fora do site mas segue na planilha', () => {
+  const catalogo = R.montaCatalogo([
+    { id: 'visivel', nome: 'Visível', ativo: 'SIM' },
+    { id: 'porta-vinho-reserva', nome: 'Porta-Vinho Reserva', ativo: 'NÃO' },
+    { id: 'sem-campo', nome: 'Sem campo ativo' },
+  ]);
+  assert.deepEqual(catalogo.map((p) => p.id), ['visivel']);
+});
+
+/* ============================================================
+   REQ-03 — ordem de exibição
+   ============================================================ */
+
+test('REQ-03: destaque vem primeiro, depois ordem, depois nome', () => {
+  const catalogo = R.montaCatalogo([
+    { id: 'c', nome: 'Comum C', ativo: 'SIM', ordem: '3' },
+    { id: 'a', nome: 'Comum A', ativo: 'SIM', ordem: '1' },
+    { id: 'd', nome: 'Destaque D', ativo: 'SIM', ordem: '9', destaque: 'SIM' },
+    { id: 'b', nome: 'Comum B', ativo: 'SIM', ordem: '2' },
+  ]);
+  assert.deepEqual(catalogo.map((p) => p.id), ['d', 'a', 'b', 'c']);
+});
+
+test('REQ-03: ordem vazia vai para o fim, não para o começo', () => {
+  const catalogo = R.montaCatalogo([
+    { id: 'sem-ordem', nome: 'Sem ordem', ativo: 'SIM', ordem: '' },
+    { id: 'com-ordem', nome: 'Com ordem', ativo: 'SIM', ordem: '5' },
+  ]);
+  assert.deepEqual(catalogo.map((p) => p.id), ['com-ordem', 'sem-ordem']);
+});
+
+test('REQ-03: empate na ordem desempata por nome em pt-BR', () => {
+  const catalogo = R.montaCatalogo([
+    { id: 'o', nome: 'Órbita', ativo: 'SIM', ordem: '1' },
+    { id: 'a', nome: 'Ânfora', ativo: 'SIM', ordem: '1' },
+    { id: 'c', nome: 'Cachepô', ativo: 'SIM', ordem: '1' },
+  ]);
+  // Em pt-BR, Â vem antes de C, que vem antes de Ó.
+  assert.deepEqual(catalogo.map((p) => p.id), ['a', 'c', 'o']);
+});
+
+/* ============================================================
+   REQ-21 / REQ-22 — pronta entrega x sob encomenda
+   ============================================================ */
+
+test('REQ-21: estoque maior que zero é pronta entrega', () => {
+  const s = R.situacao({ disponivel: 3 }, {});
+  assert.equal(s.pronta, true);
+  assert.equal(s.texto, 'Pronta entrega');
+});
+
+test('REQ-21: a quantidade exata não vaza sem MOSTRAR_QUANTIDADE', () => {
+  assert.equal(R.situacao({ disponivel: 7 }, {}).texto, 'Pronta entrega');
+  assert.equal(R.situacao({ disponivel: 7 }, { mostrarQuantidade: false }).texto, 'Pronta entrega');
+  assert.equal(R.situacao({ disponivel: 7 }, { mostrarQuantidade: true }).texto, 'Pronta entrega (7)');
+});
+
+test('REQ-22: sem estoque é sob encomenda', () => {
+  const s = R.situacao({ disponivel: 0 }, {});
+  assert.equal(s.pronta, false);
+  assert.equal(s.texto, 'Sob encomenda');
+});
+
+test('REQ-22: havendo prazo, ele entra no texto', () => {
+  assert.equal(
+    R.situacao({ disponivel: 0, prazoDias: 10 }, {}).texto,
+    'Sob encomenda · fica pronta em até 10 dias');
+});
+
+test('REQ-21: disponivel ilegível é tratado como zero, não como estoque', () => {
+  // Se o PROCV da planilha falhar e devolver texto, a peça não pode
+  // prometer pronta entrega.
+  const p = R.montaProduto({ id: 'x', nome: 'X', disponivel: '#N/D' });
+  assert.equal(p.disponivel, 0);
+  assert.equal(R.situacao(p, {}).pronta, false);
+});
+
+/* ============================================================
+   REQ-23 / REQ-24 — filtro e busca
+   ============================================================ */
+
+const amostra = R.montaCatalogo([
+  { id: 'cachepo-curva', nome: 'Cachepô Curva', categoria: 'Vasos e cachepôs',
+    descricao: 'Uma diagonal fluida separa duas texturas.', ativo: 'SIM', ordem: '1' },
+  { id: 'porta-objetos', nome: 'Porta-Objetos', categoria: 'Mesa e escritório',
+    descricao: 'Chave, relógio, o anel que sai da mão.', ativo: 'SIM', ordem: '2' },
+  { id: 'mini-vaso', nome: 'Mini Vaso Canelado', categoria: 'Vasos e cachepôs',
+    descricao: 'Um cilindro pequeno e canelado.', ativo: 'SIM', ordem: '3' },
+]);
+
+test('REQ-23: categorias saem dos dados, sem repetir', () => {
+  assert.deepEqual(R.categoriasDe(amostra), ['Vasos e cachepôs', 'Mesa e escritório']);
+});
+
+test('REQ-23: filtro por categoria', () => {
+  const r = R.filtraProdutos(amostra, { categoria: 'Vasos e cachepôs' });
+  assert.deepEqual(r.map((p) => p.id), ['cachepo-curva', 'mini-vaso']);
+});
+
+test('REQ-23: "todas" não filtra nada', () => {
+  assert.equal(R.filtraProdutos(amostra, { categoria: 'todas' }).length, 3);
+  assert.equal(R.filtraProdutos(amostra, {}).length, 3);
+});
+
+test('REQ-24: busca ignora acento e caixa', () => {
+  assert.deepEqual(R.filtraProdutos(amostra, { busca: 'cachepo' }).map((p) => p.id),
+    ['cachepo-curva', 'mini-vaso']);   // um pelo nome, outro pela categoria
+  assert.deepEqual(R.filtraProdutos(amostra, { busca: 'CACHEPÔ CURVA' }).map((p) => p.id),
+    ['cachepo-curva']);
+});
+
+test('REQ-24: busca alcança a descrição', () => {
+  assert.deepEqual(R.filtraProdutos(amostra, { busca: 'relogio' }).map((p) => p.id),
+    ['porta-objetos']);
+});
+
+test('REQ-24: busca e categoria se somam', () => {
+  const r = R.filtraProdutos(amostra, { categoria: 'Vasos e cachepôs', busca: 'canelado' });
+  assert.deepEqual(r.map((p) => p.id), ['mini-vaso']);
+});
+
+test('REQ-24: busca sem resultado devolve lista vazia, não erro', () => {
+  assert.deepEqual(R.filtraProdutos(amostra, { busca: 'guarda-chuva' }), []);
+});
+
+/* ============================================================
+   REQ-30 a REQ-33 — pedido pelo WhatsApp
+   ============================================================ */
+
+const peca = R.montaProduto({
+  id: 'mini-vaso-canelado', nome: 'Mini Vaso Canelado', ativo: 'SIM',
+  preco: '90', cores: 'Creme; Terracota',
+});
+
+const modelo = 'Olá! Vi no catálogo e quero o *{nome}* ({preco}).';
+const config = { numero: '5527999998888', modelo: modelo };
+
+test('REQ-31: a mensagem leva nome e preço', () => {
+  const msg = R.montaMensagem(peca, null, modelo, '');
+  assert.ok(msg.includes('Mini Vaso Canelado'), 'falta o nome');
+  assert.ok(semNbsp(msg).includes('R$ 90,00'), 'falta o preço formatado');
+});
+
+test('REQ-31: a cor escolhida entra na mensagem', () => {
+  assert.ok(R.montaMensagem(peca, 'Terracota', modelo, '').includes('Na cor Terracota.'));
+  assert.ok(!R.montaMensagem(peca, null, modelo, '').includes('Na cor'));
+});
+
+test('REQ-31: a mensagem leva o link direto da peça', () => {
+  const msg = R.montaMensagem(peca, null, modelo, 'https://favna.github.io/catalogo/');
+  assert.ok(msg.includes('https://favna.github.io/catalogo/#/p/mini-vaso-canelado'));
+});
+
+test('REQ-32: peça personalizável pede o texto do cliente', () => {
+  const custom = R.montaProduto({ id: 'mao', nome: 'Mão Porta-Joias',
+    ativo: 'SIM', personalizavel: 'SIM' });
+  assert.ok(R.montaMensagem(custom, null, modelo, '').includes('Gostaria de personalizar com:'));
+  assert.ok(!R.montaMensagem(peca, null, modelo, '').includes('personalizar'));
+});
+
+test('REQ-30: o link é wa.me com a mensagem escapada', () => {
+  const url = R.linkWhatsApp(peca, 'Creme', config, 'https://exemplo.com/');
+  assert.ok(url.startsWith('https://wa.me/5527999998888?text='));
+  const texto = url.split('?text=')[1];
+  // Espaço e quebra de linha crus quebrariam a URL. O `*` do negrito do
+  // WhatsApp sobrevive literal de propósito: encodeURIComponent não o
+  // escapa e não precisa — asterisco é válido em query string.
+  assert.ok(!/[ \n]/.test(texto), 'a mensagem não foi escapada');
+  assert.ok(texto.includes('%20'), 'os espaços deveriam ter virado %20');
+  assert.ok(decodeURIComponent(texto).includes('*Mini Vaso Canelado*'));
+});
+
+test('REQ-33: sem número configurado não existe link de pedido', () => {
+  assert.equal(R.linkWhatsApp(peca, null, { numero: '55DDDNUMERO', modelo }, ''), null);
+  assert.equal(R.linkWhatsApp(peca, null, { numero: '', modelo }, ''), null);
+  assert.equal(R.linkWhatsApp(peca, null, {}, ''), null);
+});
+
+test('REQ-33: valida o formato 55 + DDD + número', () => {
+  assert.equal(R.numeroConfigurado('5527999998888'), true);   // 13 dígitos, celular
+  assert.equal(R.numeroConfigurado('552733334444'), true);    // 12 dígitos, fixo
+  assert.equal(R.numeroConfigurado('55DDDNUMERO'), false);    // o placeholder
+  assert.equal(R.numeroConfigurado('27999998888'), false);    // falta o 55
+  assert.equal(R.numeroConfigurado('+55 27 99999-8888'), false); // precisa ser só dígito
+  assert.equal(R.numeroConfigurado(''), false);
+  assert.equal(R.numeroConfigurado(null), false);
+});
+
+/* ============================================================
+   REQ-10 — privacidade: o catálogo real não pode ter dado interno
+   ============================================================ */
+
+test('REQ-10: o produto exposto só tem campos públicos', () => {
+  // Se alguém acrescentar uma coluna de custo na planilha, ela não deve
+  // atravessar para o objeto que o site usa.
+  const p = R.montaProduto({
+    id: 'x', nome: 'X', ativo: 'SIM',
+    custo: '14,43', margem: '0,3', cliente: 'Papelaria Estrela',
+    lucro_renata: '12', link_modelo: 'https://patreon.com/posts/123',
+  });
+  const permitidos = ['id', 'nome', 'ativo', 'ordem', 'categoria', 'descricao',
+    'preco', 'fotos', 'cores', 'personalizavel', 'prazoDias', 'disponivel',
+    'destaque', 'specs'];
+  assert.deepEqual(Object.keys(p).sort(), permitidos.slice().sort());
+});
