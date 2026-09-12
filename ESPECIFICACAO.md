@@ -96,6 +96,8 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-29 | Preço formatado com `Intl.NumberFormat('pt-BR', BRL)` | ✅ |
 | REQ-15 | Cor do catálogo mostra uma **amostra de filamento** — disco com as linhas de camada, desenhado em CSS a partir do hex, sem imagem. O nome escrito na planilha casa com a amostra pelo slug, sem tabela de tradução | ✅ |
 | REQ-16 | Cor **sem** amostra cadastrada continua vendável: o botão vira só o rótulo de texto. Catálogo de cores incompleto é estado normal, não erro | ✅ |
+| REQ-17 | Há uma **seção só de cores**, mostrando todo o catálogo com amostra, nome e acabamento. Agrupada por acabamento e, dentro do grupo, do mais claro ao mais escuro. Se o catálogo de cores estiver vazio, a seção não existe | ✅ |
+| REQ-18 | A seção tem link direto `#cores`, para mandar no WhatsApp quando o cliente pergunta que cores existem. Funciona mesmo se o catálogo de peças falhar: a vitrine não depende do CSV | ✅ |
 
 ---
 

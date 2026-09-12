@@ -188,6 +188,48 @@ function desenhaGrade() {
   lista.forEach((p) => alvo.appendChild(cartao(p)));
 }
 
+/* ---------- render: vitrine de cores (REQ-17) ---------- */
+
+const NOME_ACABAMENTO = {
+  fosco: 'fosco',
+  silk: 'acetinado',
+  marmorizado: 'mesclado',
+  transparente: 'translúcido',
+};
+
+function desenhaPaleta() {
+  const secao = $('#cores');
+  const alvo = $('#paleta');
+  const cores = Regras.paletaOrdenada(typeof CORES === 'undefined' ? null : CORES);
+
+  // Sem catálogo de cores, a seção inteira não existe — melhor que um
+  // título seguido de nada.
+  if (!cores.length) { secao.hidden = true; return; }
+
+  alvo.innerHTML = '';
+  cores.forEach((cor) => {
+    const item = document.createElement('li');
+    item.className = 'amostra';
+
+    const disco = document.createElement('span');
+    disco.className = 'amostra-disco cor-disco ' + cor.acabamento;
+    disco.style.setProperty('--cor', cor.hex);
+    disco.setAttribute('aria-hidden', 'true');
+
+    const nome = document.createElement('p');
+    nome.className = 'amostra-nome';
+    nome.textContent = cor.nome;
+
+    const acab = document.createElement('p');
+    acab.className = 'amostra-acabamento';
+    acab.textContent = NOME_ACABAMENTO[cor.acabamento] || cor.acabamento;
+
+    item.append(disco, nome, acab);
+    alvo.appendChild(item);
+  });
+  secao.hidden = false;
+}
+
 /* ---------- render: detalhe ---------- */
 
 function desenhaDetalhe(produto) {
@@ -368,11 +410,26 @@ function prendeFoco(evento) {
   }
 }
 
-/** REQ-50 — link direto #/p/<id>. */
+/**
+ * REQ-50 — link direto #/p/<id>.
+ * REQ-18 — link direto #cores para a vitrine de cores.
+ *
+ * A âncora nativa não resolve o #cores: o navegador tenta rolar no
+ * carregamento, quando a seção ainda está `hidden`, e desiste. Por isso a
+ * rolagem é feita aqui, depois de a vitrine existir.
+ */
 function aplicaHash() {
   const m = location.hash.match(/^#\/p\/(.+)$/);
-  if (m) abre(decodeURIComponent(m[1]));
-  else if (estado.aberto) fecha();
+  if (m) { abre(decodeURIComponent(m[1])); return; }
+
+  if (estado.aberto) fecha();
+
+  if (location.hash === '#cores') {
+    const secao = $('#cores');
+    if (secao && !secao.hidden) {
+      secao.scrollIntoView({ block: 'start' });
+    }
+  }
 }
 
 /* ---------- avisos (REQ-41, REQ-42, REQ-44) ---------- */
@@ -404,6 +461,10 @@ async function inicia() {
   const campo = $('#busca');
   campo.addEventListener('input', () => { estado.busca = campo.value; desenhaGrade(); });
 
+  // A vitrine de cores vem de js/cores.js, não do CSV: desenha antes do
+  // fetch para continuar de pé mesmo se o catálogo de peças falhar.
+  desenhaPaleta();
+
   try {
     await carrega();
   } catch (e) {
@@ -411,6 +472,7 @@ async function inicia() {
     mostraAviso(
       'Não deu para carregar o catálogo agora. Verifique a conexão e recarregue a página — ' +
       'ou fale com a gente pelo WhatsApp.', 'erro');
+    aplicaHash();   // a vitrine de cores não depende do CSV: #cores segue valendo
     return;
   }
 

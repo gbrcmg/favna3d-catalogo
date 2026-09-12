@@ -224,6 +224,54 @@
     return catalogo[slugDeCor(nome)] || null;
   }
 
+  /**
+   * REQ-17 — luminância relativa de um hex, 0 (preto) a 1 (branco).
+   * Usa os pesos da percepção humana: o olho lê verde como muito mais
+   * claro que azul na mesma intensidade. Serve para ordenar a paleta do
+   * claro ao escuro de um jeito que pareça certo, não aritmeticamente certo.
+   */
+  function luminanciaDe(hex) {
+    const m = String(hex || '').match(/^#?([0-9a-f]{6})$/i);
+    if (!m) return 0;
+    const n = parseInt(m[1], 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  }
+
+  // Ordem dos acabamentos na vitrine: o do dia a dia primeiro, os
+  // especiais depois. Acabamento desconhecido cai no fim.
+  const ORDEM_ACABAMENTO = ['fosco', 'silk', 'marmorizado', 'transparente'];
+
+  /**
+   * REQ-17 — o catálogo de cores virado numa lista para a vitrine:
+   * agrupado por acabamento e, dentro de cada grupo, do mais claro ao mais
+   * escuro. Assim a seção lê como uma cartela de cores, não como uma lista
+   * alfabética.
+   */
+  function paletaOrdenada(catalogo) {
+    if (!catalogo) return [];
+    return Object.keys(catalogo)
+      .map(function (slug) {
+        const c = catalogo[slug];
+        return {
+          slug: slug,
+          nome: c.nome,
+          hex: c.hex,
+          acabamento: c.acabamento,
+        };
+      })
+      .sort(function (a, b) {
+        let ia = ORDEM_ACABAMENTO.indexOf(a.acabamento);
+        let ib = ORDEM_ACABAMENTO.indexOf(b.acabamento);
+        if (ia === -1) ia = ORDEM_ACABAMENTO.length;
+        if (ib === -1) ib = ORDEM_ACABAMENTO.length;
+        if (ia !== ib) return ia - ib;
+        const la = luminanciaDe(a.hex), lb = luminanciaDe(b.hex);
+        if (la !== lb) return lb - la;              // claro primeiro
+        return a.nome.localeCompare(b.nome, 'pt-BR');
+      });
+  }
+
   /* ---------- pedido ---------- */
 
   /** REQ-33 — 55 + DDD + número, só dígitos. Placeholder não passa. */
@@ -269,6 +317,8 @@
     filtraProdutos: filtraProdutos,
     categoriasDe: categoriasDe,
     slugDeCor: slugDeCor,
+    luminanciaDe: luminanciaDe,
+    paletaOrdenada: paletaOrdenada,
     amostraDeCor: amostraDeCor,
     numeroConfigurado: numeroConfigurado,
     montaMensagem: montaMensagem,

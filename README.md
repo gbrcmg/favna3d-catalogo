@@ -48,6 +48,21 @@ Também funciona um link do Google Drive — mas o arquivo precisa estar
 compartilhado como "qualquer pessoa com o link". O site converte o endereço
 sozinho. Foto do repositório é mais confiável e carrega mais rápido.
 
+### A seção de cores
+
+A página tem uma seção **"As cores"**, no fim, com todo o catálogo de cores:
+amostra, nome e acabamento. Ela se monta sozinha a partir de `js/cores.js` —
+cadastrar uma cor nova já a faz aparecer lá.
+
+O endereço direto é útil no dia a dia: quando alguém pergunta que cores existem,
+mande
+
+```
+https://gbrcmg.github.io/favna3d-catalogo/#cores
+```
+
+que abre a página já na seção.
+
 ### Acrescentar uma cor
 
 Na planilha, a coluna `cores` é só texto, separado por ponto-e-vírgula:

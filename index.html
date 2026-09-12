@@ -60,6 +60,25 @@
 
   <section class="grade" id="grade" aria-label="Peças"></section>
 
+  <!-- Vitrine de cores (REQ-17). Some sozinha se o catálogo de cores
+       estiver vazio — ver desenhaPaleta() no app.js. -->
+  <section class="vitrine-cores" id="cores" aria-labelledby="cores-titulo" hidden>
+    <div class="faixa" aria-hidden="true"></div>
+    <div class="vitrine-cabeca">
+      <h2 id="cores-titulo">As cores</h2>
+      <p class="vitrine-intro">
+        Cada peça nasce de um filamento. Estes são os que a gente imprime hoje —
+        foscos, salvo onde está indicado. Quer uma peça em alguma cor daqui?
+        Fale com a gente.
+      </p>
+    </div>
+    <ul class="paleta" id="paleta"></ul>
+    <p class="vitrine-nota">
+      A tela mente um pouco: na mão, o tom é mais quente e mais mineral do que
+      qualquer monitor mostra.
+    </p>
+  </section>
+
 </main>
 
 <footer class="rodape">
@@ -67,6 +86,7 @@
   <div class="conteudo">
     <p class="assinatura">F&nbsp;Λ&nbsp;V&nbsp;N&nbsp;Λ &nbsp;—&nbsp;3&nbsp;D&nbsp;—</p>
     <p class="miudo">Impressão 3D autoral · Vila Velha, ES · Cada peça é feita camada por camada.</p>
+    <p class="miudo"><a class="elo-cores" href="#cores">Ver as cores disponíveis</a></p>
   </div>
 </footer>
 

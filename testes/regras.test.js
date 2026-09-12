@@ -434,3 +434,74 @@ test('REQ-15: todo item do catálogo de cores está bem formado', () => {
       `"${c.nome}" não volta para "${slug}"`);
   });
 });
+
+/* ============================================================
+   REQ-17 — vitrine de cores
+   ============================================================ */
+
+/** Luminância é float: comparar com tolerância, não com igualdade exata.
+ *  0.2126+0.7152+0.0722 soma 1, mas a conta em ponto flutuante devolve
+ *  0.9999999999999999 para o branco. Isso não afeta a ordenação. */
+const perto = (a, b) => Math.abs(a - b) < 1e-9;
+
+test('REQ-17: luminância pesa os canais como o olho', () => {
+  assert.ok(perto(R.luminanciaDe('#FFFFFF'), 1), 'branco deveria dar ~1');
+  assert.equal(R.luminanciaDe('#000000'), 0);
+  // O verde puro é lido como muito mais claro que o azul puro.
+  assert.ok(R.luminanciaDe('#00FF00') > R.luminanciaDe('#0000FF'));
+  assert.ok(R.luminanciaDe('#E9E0D7') > R.luminanciaDe('#373737'));
+});
+
+test('REQ-17: hex inválido não quebra a ordenação', () => {
+  [null, undefined, '', 'terracota', '#FFF', '#12345', 'rgb(1,2,3)'].forEach((v) => {
+    assert.equal(R.luminanciaDe(v), 0, `${v} deveria dar 0`);
+  });
+});
+
+test('REQ-17: aceita hex com e sem cerquilha, maiúsculo ou minúsculo', () => {
+  assert.ok(perto(R.luminanciaDe('#ffffff'), 1));
+  assert.ok(perto(R.luminanciaDe('FFFFFF'), 1));
+  assert.ok(perto(R.luminanciaDe('#ffffff'), R.luminanciaDe('FFFFFF')));
+});
+
+test('REQ-17: a paleta agrupa por acabamento, na ordem certa', () => {
+  const paleta = R.paletaOrdenada({
+    z: { nome: 'Z', hex: '#888888', acabamento: 'transparente' },
+    a: { nome: 'A', hex: '#888888', acabamento: 'silk' },
+    m: { nome: 'M', hex: '#888888', acabamento: 'fosco' },
+    n: { nome: 'N', hex: '#888888', acabamento: 'marmorizado' },
+  });
+  assert.deepEqual(paleta.map((c) => c.acabamento),
+    ['fosco', 'silk', 'marmorizado', 'transparente']);
+});
+
+test('REQ-17: dentro do grupo, do mais claro ao mais escuro', () => {
+  const paleta = R.paletaOrdenada({
+    escuro: { nome: 'Escuro', hex: '#222222', acabamento: 'fosco' },
+    claro:  { nome: 'Claro',  hex: '#EEEEEE', acabamento: 'fosco' },
+    meio:   { nome: 'Meio',   hex: '#888888', acabamento: 'fosco' },
+  });
+  assert.deepEqual(paleta.map((c) => c.slug), ['claro', 'meio', 'escuro']);
+});
+
+test('REQ-17: acabamento desconhecido vai para o fim, sem sumir', () => {
+  const paleta = R.paletaOrdenada({
+    novo:  { nome: 'Novo',  hex: '#888888', acabamento: 'fluorescente' },
+    fosco: { nome: 'Fosco', hex: '#888888', acabamento: 'fosco' },
+  });
+  assert.deepEqual(paleta.map((c) => c.slug), ['fosco', 'novo']);
+});
+
+test('REQ-17: sem catálogo a vitrine recebe lista vazia e se esconde', () => {
+  assert.deepEqual(R.paletaOrdenada(null), []);
+  assert.deepEqual(R.paletaOrdenada(undefined), []);
+  assert.deepEqual(R.paletaOrdenada({}), []);
+});
+
+test('REQ-17: a paleta real traz todas as cores do catálogo', () => {
+  const paleta = R.paletaOrdenada(CORES);
+  assert.equal(paleta.length, Object.keys(CORES).length);
+  paleta.forEach((c) => {
+    assert.ok(c.slug && c.nome && c.hex && c.acabamento, `item incompleto: ${c.slug}`);
+  });
+});
