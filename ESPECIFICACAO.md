@@ -143,7 +143,29 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-61 | `og:image` é uma imagem dedicada de 1200×630, não o recorte de uma foto de produto | ✅ |
 | REQ-64 | `og:url` e `og:image` são absolutas — o WhatsApp não resolve caminho relativo na prévia | ✅ |
 | REQ-62 | O README permite adicionar uma peça nova sem ajuda de desenvolvedor | 🟡 |
-| REQ-63 | Confirmado que o `fetch` do CSV publicado funciona a partir do GitHub Pages (CORS). Não funcionando, usar `gviz/tq?tqx=out:csv&sheet=Catalogo` e registrar a escolha aqui | 🔒 |
+| REQ-63 | Confirmado que o `fetch` do CSV publicado funciona a partir do GitHub Pages (CORS) | ✅ |
+
+---
+
+### REQ-63 — resolvido em 2026-09-12
+
+Vale a forma **1**: a URL do "Publicar na web" (`/pub?gid=0&single=true&output=csv`).
+Medido com `curl -H "Origin: https://gbrcmg.github.io"`:
+
+```
+307 → access-control-allow-origin: https://gbrcmg.github.io
+200 → access-control-allow-origin: *
+      content-type: text/csv; charset=utf-8
+      cache-control: private, max-age=300
+```
+
+O navegador aceita a leitura de outro domínio. **Não precisamos** do `gviz/tq`
+(que exigiria a planilha aberta a qualquer pessoa com o link) nem da GitHub Action
+que commitaria o CSV. A decisão 1 — sem etapa de build — sobrevive intacta.
+
+O `max-age=300` transforma os "alguns minutos" em número: o Google autoriza cinco
+minutos de cache no navegador. Nosso `fetch` usa `cache: 'no-store'` e passa por
+cima disso, então o atraso que sobra é só o da republicação do lado do Google.
 
 ---
 

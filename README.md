@@ -159,18 +159,15 @@ avisando que está em modo de teste.
 **O repositório é público.** Nada de custo, margem, lucro, nome de cliente ou
 link de modelo do Patreon pode entrar em arquivo nenhum daqui.
 
-### Se o CSV não carregar publicado
+### Qual endereço de CSV vale (testado)
 
-O endereço "Publicar na web" costuma funcionar. Se der erro de CORS, a
-alternativa é:
+Vale o link do **"Publicar na web"**, formato CSV — o que termina em
+`/pub?gid=0&single=true&output=csv`. Testado em 12/09/2026 contra a origem do
+GitHub Pages: o Google devolve `access-control-allow-origin: *` e o navegador
+aceita a leitura sem reclamar.
 
-```
-https://docs.google.com/spreadsheets/d/<ID_DA_PLANILHA>/gviz/tq?tqx=out:csv&sheet=Catalogo
-```
-
-Essa forma exige a planilha compartilhada como "qualquer pessoa com o link"
-(leitor) — o que é aceitável para a `Favna_Catalogo`, porque ela só tem dado
-público. Anote aqui qual das duas ficou valendo.
+Não é preciso deixar a planilha aberta a "qualquer pessoa com o link": a
+publicação da aba basta, e é o arranjo mais fechado dos dois.
 
 ---
 
