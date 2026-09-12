@@ -284,13 +284,89 @@ img { max-width: 100%; display: block; }
   color: var(--carvao);
 }
 
+/* ---------- carrossel de cores (REQ-19) ----------
+   Fileira que desliza com o dedo. O ponto fraco conhecido do formato é
+   esconder o que está fora da tela, então três coisas combatem isso: a
+   próxima cor sempre aparece cortada na borda, há barra de posição, e no
+   desktop (sem gesto de arrastar) aparecem setas. */
+
+.carrossel {
+  position: relative;
+  /* Sangra o respiro lateral do .conteudo (1rem), para o corte da próxima
+     cor acontecer na margem da tela e ficar claro que a fileira continua.
+     O padding-left do trilho recoloca a primeira cor alinhada com o texto.
+     Em tela larga esta sangria é inócua: são 16px além do container. */
+  margin-inline: -1rem;
+}
+
 .paleta {
   list-style: none;
   margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-  gap: clamp(1.25rem, 3vw, 2rem) 1rem;
+  padding: 0 2.5rem 0 1rem;   /* à esquerda, realinha; à direita, deixa o corte */
+  /* Sem isto, o scroll-snap alinha a primeira cor à borda INTERNA do
+     padding e a rolagem nasce em 16px, não em 0 — o que fazia a seta de
+     voltar aparecer já na chegada. O scroll-padding ensina o snap a
+     contar o respiro. */
+  scroll-padding-inline: 1rem 2.5rem;
+  display: flex;
+  gap: clamp(1.25rem, 4vw, 2.25rem);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;            /* Firefox */
+  -ms-overflow-style: none;
+}
+.paleta::-webkit-scrollbar { display: none; }
+
+.paleta > .amostra {
+  flex: 0 0 auto;
+  width: clamp(5.5rem, 22vw, 7rem);
+  scroll-snap-align: start;
+}
+
+/* Setas: só onde existe ponteiro fino (mouse). No celular o gesto basta,
+   e seta em tela pequena só rouba espaço da cor. */
+.seta {
+  display: none;
+  position: absolute;
+  top: clamp(1.6rem, 6vw, 2.2rem);
+  z-index: 2;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--linha);
+  border-radius: 50%;
+  background: var(--offwhite);
+  color: var(--carvao);
+  font: 400 1.1rem/1 var(--corpo);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.seta:hover { border-color: var(--bege); color: var(--terracota); }
+.seta-antes  { left: -0.5rem; }
+.seta-depois { right: -0.5rem; }
+
+@media (hover: hover) and (pointer: fine) {
+  .seta:not([hidden]) { display: grid; place-items: center; }
+}
+
+/* Barra de posição: diz onde você está na fileira sem precisar de 11
+   bolinhas. Funciona para qualquer quantidade de cores. */
+.barra-posicao {
+  margin-top: clamp(1rem, 3vw, 1.5rem);
+  height: 2px;
+  background: var(--linha);
+  overflow: hidden;
+}
+.barra-posicao-tento {
+  display: block;
+  height: 100%;
+  width: 28%;
+  background: var(--terracota);
+  transform: translateX(0);
+  transition: transform 0.18s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .barra-posicao-tento { transition: none; }
 }
 
 .amostra {
@@ -301,7 +377,7 @@ img { max-width: 100%; display: block; }
 }
 /* O nome ocupa 1 ou 2 linhas ("Ouro Envelhecido Silk"). Reservar as duas
    mantém o acabamento alinhado na mesma linha em toda a fileira. */
-.amostra-nome { min-height: 2.2em; }
+.amostra-nome { min-height: 2.6em; }   /* 2 linhas x 1.3 de entrelinha */
 
 /* Herda tudo de .cor-disco — as camadas, o silk, o xadrez do translúcido —
    e só cresce. Uma definição de amostra, dois tamanhos.

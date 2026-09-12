@@ -228,6 +228,52 @@ function desenhaPaleta() {
     alvo.appendChild(item);
   });
   secao.hidden = false;
+  ligaCarrossel();
+}
+
+/* ---------- carrossel: setas e barra de posição (REQ-19) ---------- */
+
+function atualizaCarrossel() {
+  const trilho = $('#paleta');
+  const p = Regras.progressoCarrossel(trilho);
+
+  // Nada a rolar (poucas cores, tela larga): esconde os controles em vez
+  // de deixar seta que não faz nada.
+  $('#barra-posicao').hidden = !p.rola;
+  $('#cor-antes').hidden = !p.rola || p.noInicio;
+  $('#cor-depois').hidden = !p.rola || p.noFim;
+  if (!p.rola) return;
+
+  // O tento tem LARGURA_TENTO% da barra e precisa percorrer o resto dela.
+  // translateX em % é relativo à largura do PRÓPRIO elemento, não à da
+  // barra — daí a razão: percorrer 72% da barra são 257% do tento.
+  const LARGURA_TENTO = 28;
+  const curso = (100 - LARGURA_TENTO) / LARGURA_TENTO * 100;
+  $('#barra-posicao-tento').style.transform =
+    `translateX(${(p.fracao * curso).toFixed(2)}%)`;
+}
+
+function ligaCarrossel() {
+  const trilho = $('#paleta');
+  if (!trilho || trilho.dataset.ligado) { atualizaCarrossel(); return; }
+  trilho.dataset.ligado = '1';
+
+  // Um passo = a largura visível menos uma amostra, para a cor da borda
+  // não ser pulada e servir de ponto de referência.
+  const passo = () => Math.max(120, trilho.clientWidth - 110);
+  const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const anda = (sentido) => trilho.scrollBy({
+    left: sentido * passo(),
+    behavior: suave ? 'smooth' : 'auto',
+  });
+
+  $('#cor-antes').addEventListener('click', () => anda(-1));
+  $('#cor-depois').addEventListener('click', () => anda(1));
+  trilho.addEventListener('scroll', atualizaCarrossel, { passive: true });
+  window.addEventListener('resize', atualizaCarrossel);
+
+  atualizaCarrossel();
 }
 
 /* ---------- render: detalhe ---------- */

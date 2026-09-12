@@ -272,6 +272,38 @@
       });
   }
 
+  /**
+   * REQ-19 — estado do carrossel de cores a partir da rolagem.
+   *
+   * Devolve:
+   *   fracao   0 a 1, o quanto já se percorreu (alimenta a barra de posição)
+   *   noInicio se não há para onde voltar
+   *   noFim    se não há para onde avançar
+   *   rola     se o conteúdo excede a área visível
+   *
+   * `rola` falso é o caso degenerado que importa: com poucas cores tudo
+   * cabe na tela, e aí setas e barra não devem aparecer — carrossel que
+   * não rola com seta que não faz nada é pior que grade.
+   */
+  function progressoCarrossel(m) {
+    const scrollLeft = (m && m.scrollLeft) || 0;
+    const scrollWidth = (m && m.scrollWidth) || 0;
+    const clientWidth = (m && m.clientWidth) || 0;
+    const maximo = scrollWidth - clientWidth;
+
+    // 1px de tolerância: zoom e subpixel deixam o fim em 0.5px de resto
+    if (maximo <= 1) {
+      return { fracao: 0, noInicio: true, noFim: true, rola: false };
+    }
+    const fracao = Math.min(1, Math.max(0, scrollLeft / maximo));
+    return {
+      fracao: fracao,
+      noInicio: scrollLeft <= 1,
+      noFim: scrollLeft >= maximo - 1,
+      rola: true,
+    };
+  }
+
   /* ---------- pedido ---------- */
 
   /** REQ-33 — 55 + DDD + número, só dígitos. Placeholder não passa. */
@@ -319,6 +351,7 @@
     slugDeCor: slugDeCor,
     luminanciaDe: luminanciaDe,
     paletaOrdenada: paletaOrdenada,
+    progressoCarrossel: progressoCarrossel,
     amostraDeCor: amostraDeCor,
     numeroConfigurado: numeroConfigurado,
     montaMensagem: montaMensagem,

@@ -72,7 +72,17 @@
         Fale com a gente.
       </p>
     </div>
-    <ul class="paleta" id="paleta"></ul>
+    <div class="carrossel">
+      <button type="button" class="seta seta-antes" id="cor-antes"
+              aria-label="Ver cores anteriores" hidden>‹</button>
+      <ul class="paleta" id="paleta" tabindex="0" role="group"
+          aria-label="Cores disponíveis — role para o lado para ver todas"></ul>
+      <button type="button" class="seta seta-depois" id="cor-depois"
+              aria-label="Ver mais cores" hidden>›</button>
+    </div>
+    <div class="barra-posicao" id="barra-posicao" aria-hidden="true" hidden>
+      <span class="barra-posicao-tento" id="barra-posicao-tento"></span>
+    </div>
     <p class="vitrine-nota">
       A tela mente um pouco: na mão, o tom é mais quente e mais mineral do que
       qualquer monitor mostra.

@@ -97,6 +97,7 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-15 | Cor do catálogo mostra uma **amostra de filamento** — disco com as linhas de camada, desenhado em CSS a partir do hex, sem imagem. O nome escrito na planilha casa com a amostra pelo slug, sem tabela de tradução | ✅ |
 | REQ-16 | Cor **sem** amostra cadastrada continua vendável: o botão vira só o rótulo de texto. Catálogo de cores incompleto é estado normal, não erro | ✅ |
 | REQ-17 | Há uma **seção só de cores**, mostrando todo o catálogo com amostra, nome e acabamento. Agrupada por acabamento e, dentro do grupo, do mais claro ao mais escuro. Se o catálogo de cores estiver vazio, a seção não existe | ✅ |
+| REQ-19 | As cores vivem num **carrossel horizontal** que desliza com o dedo. Como o formato esconde o que está fora da tela, três coisas compensam: a próxima cor sempre aparece cortada na borda, há barra de posição, e no desktop aparecem setas. Cabendo tudo na tela, setas e barra não aparecem | ✅ |
 | REQ-18 | A seção tem link direto `#cores`, para mandar no WhatsApp quando o cliente pergunta que cores existem. Funciona mesmo se o catálogo de peças falhar: a vitrine não depende do CSV | ✅ |
 
 ---
@@ -209,6 +210,30 @@ caixa e espaço extra. Sem tabela de tradução para alguém esquecer de atualiz
 
 O acabamento sai do nome do arquivo: `silk` ganha reflexo diagonal, `marmorizado`
 ganha mescla, `transparente` ganha o xadrez por baixo. O resto é fosco.
+
+---
+
+### Por que carrossel, e o que ele custa
+
+Decisão do dono, contra a minha recomendação, e vale registrar o porquê das
+duas posições. Escolher cor é tarefa de **comparação**: a grade mostrava as 11
+de uma vez, o carrossel mostra 3 ou 4. Minha proposta era grade + visor
+imersivo ao toque; a escolha foi o carrossel, pela economia de altura no
+celular e pelo gesto familiar.
+
+As três mitigações do ponto fraco estão no CSS e no JS, e não são enfeite:
+
+- **Corte na borda.** O trilho sangra 1rem além do container e tem 2,5rem de
+  respiro à direita, então a cor seguinte aparece pela metade. É o sinal de que
+  a fileira continua.
+- **Barra de posição.** Um tento de 28% percorre a barra conforme a rolagem.
+  Escolhida em vez de bolinhas porque funciona para 4 ou para 40 cores.
+- **Setas só no desktop**, atrás de `(hover: hover) and (pointer: fine)`. No
+  celular o gesto basta e seta em tela pequena rouba espaço da cor.
+
+`progressoCarrossel` trata o caso degenerate: se tudo couber na tela, `rola` é
+falso e os controles desaparecem — carrossel que não rola com seta que não faz
+nada é pior que grade.
 
 ---
 

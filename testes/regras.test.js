@@ -505,3 +505,64 @@ test('REQ-17: a paleta real traz todas as cores do catálogo', () => {
     assert.ok(c.slug && c.nome && c.hex && c.acabamento, `item incompleto: ${c.slug}`);
   });
 });
+
+/* ============================================================
+   REQ-19 — carrossel de cores
+   ============================================================ */
+
+test('REQ-19: conteúdo que cabe na tela não é carrossel', () => {
+  // O caso que importa: com poucas cores nada rola, e aí seta e barra
+  // de posição não devem aparecer.
+  const p = R.progressoCarrossel({ scrollLeft: 0, scrollWidth: 400, clientWidth: 400 });
+  assert.equal(p.rola, false);
+  assert.equal(p.noInicio, true);
+  assert.equal(p.noFim, true);
+  assert.equal(p.fracao, 0);
+});
+
+test('REQ-19: conteúdo mais estreito que a área também não rola', () => {
+  const p = R.progressoCarrossel({ scrollLeft: 0, scrollWidth: 300, clientWidth: 400 });
+  assert.equal(p.rola, false);
+});
+
+test('REQ-19: no começo só existe avançar', () => {
+  const p = R.progressoCarrossel({ scrollLeft: 0, scrollWidth: 1200, clientWidth: 400 });
+  assert.equal(p.rola, true);
+  assert.equal(p.noInicio, true);
+  assert.equal(p.noFim, false);
+  assert.equal(p.fracao, 0);
+});
+
+test('REQ-19: no fim só existe voltar', () => {
+  const p = R.progressoCarrossel({ scrollLeft: 800, scrollWidth: 1200, clientWidth: 400 });
+  assert.equal(p.noInicio, false);
+  assert.equal(p.noFim, true);
+  assert.equal(p.fracao, 1);
+});
+
+test('REQ-19: no meio, as duas setas e a fração proporcional', () => {
+  const p = R.progressoCarrossel({ scrollLeft: 400, scrollWidth: 1200, clientWidth: 400 });
+  assert.equal(p.noInicio, false);
+  assert.equal(p.noFim, false);
+  assert.equal(p.fracao, 0.5);
+});
+
+test('REQ-19: subpixel no fim ainda conta como fim', () => {
+  // Zoom do navegador deixa sobrar meio pixel; sem tolerância a seta de
+  // avançar ficaria visível para sempre, sem ter para onde ir.
+  const p = R.progressoCarrossel({ scrollLeft: 799.6, scrollWidth: 1200, clientWidth: 400 });
+  assert.equal(p.noFim, true);
+});
+
+test('REQ-19: fração nunca escapa de 0 a 1', () => {
+  // Rolagem elástica do iOS devolve scrollLeft negativo ou além do fim.
+  assert.equal(R.progressoCarrossel({ scrollLeft: -60, scrollWidth: 1200, clientWidth: 400 }).fracao, 0);
+  assert.equal(R.progressoCarrossel({ scrollLeft: 9999, scrollWidth: 1200, clientWidth: 400 }).fracao, 1);
+});
+
+test('REQ-19: medida ausente não quebra', () => {
+  [null, undefined, {}].forEach((m) => {
+    const p = R.progressoCarrossel(m);
+    assert.equal(p.rola, false, 'sem medida, não rola');
+  });
+});
