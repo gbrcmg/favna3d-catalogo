@@ -200,11 +200,16 @@ const NOME_ACABAMENTO = {
 function desenhaPaleta() {
   const secao = $('#cores');
   const alvo = $('#paleta');
-  const cores = Regras.paletaOrdenada(typeof CORES === 'undefined' ? null : CORES);
+  const catalogo = typeof CORES === 'undefined' ? null : CORES;
+  const cores = Regras.paletaOrdenada(catalogo);
 
-  // Sem catálogo de cores, a seção inteira não existe — melhor que um
-  // título seguido de nada.
+  // Sem catálogo de cores, a seção inteira não existe — e isso importa mais
+  // agora que ela fica antes das peças: um rótulo solto no topo seria pior
+  // que nada.
   if (!cores.length) { secao.hidden = true; return; }
+
+  // REQ-20 — o rótulo sai dos dados, nunca de texto fixo.
+  $('#cores-rotulo').textContent = Regras.resumoDaPaleta(catalogo);
 
   alvo.innerHTML = '';
   cores.forEach((cor) => {

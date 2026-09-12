@@ -96,7 +96,8 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-29 | Preço formatado com `Intl.NumberFormat('pt-BR', BRL)` | ✅ |
 | REQ-15 | Cor do catálogo mostra uma **amostra de filamento** — disco com as linhas de camada, desenhado em CSS a partir do hex, sem imagem. O nome escrito na planilha casa com a amostra pelo slug, sem tabela de tradução | ✅ |
 | REQ-16 | Cor **sem** amostra cadastrada continua vendável: o botão vira só o rótulo de texto. Catálogo de cores incompleto é estado normal, não erro | ✅ |
-| REQ-17 | Há uma **seção só de cores**, mostrando todo o catálogo com amostra, nome e acabamento. Agrupada por acabamento e, dentro do grupo, do mais claro ao mais escuro. Se o catálogo de cores estiver vazio, a seção não existe | ✅ |
+| REQ-17 | Há uma **faixa só de cores**, **antes da lista de peças**, mostrando todo o catálogo com amostra, nome e acabamento. Agrupada por acabamento e, dentro do grupo, do mais claro ao mais escuro. Se o catálogo de cores estiver vazio, a faixa não existe | ✅ |
+| REQ-20 | O rótulo da faixa é montado dos dados ("11 cores · fosco, acetinado, mesclado e translúcido"), nunca escrito à mão — cadastrar cor atualiza a contagem e pode acrescentar um acabamento | ✅ |
 | REQ-19 | As cores vivem num **carrossel horizontal** que desliza com o dedo. Como o formato esconde o que está fora da tela, três coisas compensam: a próxima cor sempre aparece cortada na borda, há barra de posição, e no desktop aparecem setas. Cabendo tudo na tela, setas e barra não aparecem | ✅ |
 | REQ-18 | A seção tem link direto `#cores`, para mandar no WhatsApp quando o cliente pergunta que cores existem. Funciona mesmo se o catálogo de peças falhar: a vitrine não depende do CSV | ✅ |
 
@@ -212,6 +213,21 @@ O acabamento sai do nome do arquivo: `silk` ganha reflexo diagonal, `marmorizado
 ganha mescla, `transparente` ganha o xadrez por baixo. O resto é fosco.
 
 ---
+
+### Por que a faixa fica antes das peças
+
+Movida em 2026-09-12, do fim da página para logo depois dos filtros. No fim,
+quase ninguém chegava: eram 8 peças de rolagem antes dela, e seção que não é
+vista vale zero.
+
+O custo é real e foi dosado. Cor é decisão **secundária** — escolhe-se a peça e
+depois a cor — então pôr a cor primeiro inverte o funil e empurra a primeira
+peça para baixo. Por isso a faixa subiu **enxuta**: saiu o título "As cores" e o
+parágrafo de abertura, ficou um rótulo de uma linha em tipografia mono. São
+~250px em vez de ~400, e a primeira peça segue ao alcance de uma rolagem curta.
+
+O link `#cores` continua valendo e não depende da posição: é o que se manda no
+WhatsApp quando o cliente pergunta que cores existem.
 
 ### Por que carrossel, e o que ele custa
 

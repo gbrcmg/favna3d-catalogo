@@ -55,39 +55,31 @@
     <div class="filtros" id="filtros" role="group" aria-label="Categorias"></div>
   </section>
 
+  <!-- Faixa de cores (REQ-17, REQ-20). Fica ANTES das peças de propósito:
+       no fim da página quase ninguém a via. Enxuta — rótulo curto em vez de
+       título e parágrafo — para não empurrar a primeira peça para fora da
+       primeira tela. Some sozinha se o catálogo de cores estiver vazio. -->
+  <section class="faixa-cores" id="cores" aria-labelledby="cores-rotulo" hidden>
+    <p class="cores-rotulo" id="cores-rotulo"></p>
+    <div class="carrossel">
+      <button type="button" class="seta seta-antes" id="cor-antes"
+              aria-label="Ver cores anteriores" hidden>&lsaquo;</button>
+      <ul class="paleta" id="paleta" tabindex="0" role="group"
+          aria-label="Cores disponíveis — role para o lado para ver todas"></ul>
+      <button type="button" class="seta seta-depois" id="cor-depois"
+              aria-label="Ver mais cores" hidden>&rsaquo;</button>
+    </div>
+    <div class="barra-posicao" id="barra-posicao" aria-hidden="true" hidden>
+      <span class="barra-posicao-tento" id="barra-posicao-tento"></span>
+    </div>
+    <p class="cores-nota">Na mão, o tom é mais quente e mineral do que a tela mostra.</p>
+  </section>
+
   <p id="carregando" class="estado">Carregando o catálogo…</p>
   <p id="vazio" class="estado" hidden></p>
 
   <section class="grade" id="grade" aria-label="Peças"></section>
 
-  <!-- Vitrine de cores (REQ-17). Some sozinha se o catálogo de cores
-       estiver vazio — ver desenhaPaleta() no app.js. -->
-  <section class="vitrine-cores" id="cores" aria-labelledby="cores-titulo" hidden>
-    <div class="faixa" aria-hidden="true"></div>
-    <div class="vitrine-cabeca">
-      <h2 id="cores-titulo">As cores</h2>
-      <p class="vitrine-intro">
-        Cada peça nasce de um filamento. Estes são os que a gente imprime hoje —
-        foscos, salvo onde está indicado. Quer uma peça em alguma cor daqui?
-        Fale com a gente.
-      </p>
-    </div>
-    <div class="carrossel">
-      <button type="button" class="seta seta-antes" id="cor-antes"
-              aria-label="Ver cores anteriores" hidden>‹</button>
-      <ul class="paleta" id="paleta" tabindex="0" role="group"
-          aria-label="Cores disponíveis — role para o lado para ver todas"></ul>
-      <button type="button" class="seta seta-depois" id="cor-depois"
-              aria-label="Ver mais cores" hidden>›</button>
-    </div>
-    <div class="barra-posicao" id="barra-posicao" aria-hidden="true" hidden>
-      <span class="barra-posicao-tento" id="barra-posicao-tento"></span>
-    </div>
-    <p class="vitrine-nota">
-      A tela mente um pouco: na mão, o tom é mais quente e mais mineral do que
-      qualquer monitor mostra.
-    </p>
-  </section>
 
 </main>
 
@@ -95,7 +87,7 @@
   <div class="faixa" aria-hidden="true"></div>
   <div class="conteudo">
     <p class="assinatura">F&nbsp;Λ&nbsp;V&nbsp;N&nbsp;Λ &nbsp;—&nbsp;3&nbsp;D&nbsp;—</p>
-    <p class="miudo">Impressão 3D autoral · Vila Velha, ES · Cada peça é feita camada por camada.</p>
+    <p class="miudo">Impressão 3D autoral · Cada peça é feita camada por camada.</p>
     <p class="miudo"><a class="elo-cores" href="#cores">Ver as cores disponíveis</a></p>
   </div>
 </footer>

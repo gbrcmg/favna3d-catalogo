@@ -32,7 +32,7 @@ const CONFIG = {
 
   NOME_LOJA: 'FAVNA 3D',
   TAGLINE: 'Atmosfera & Forma',
-  SUBTITULO: 'Objetos de casa impressos camada por camada, em Vila Velha (ES).',
+  SUBTITULO: 'Objetos de casa impressos camada por camada.',
 
   // {nome}, {preco} e {link} são trocados automaticamente.
   MENSAGEM_WHATSAPP: 'Olá! Vi no catálogo e quero o *{nome}* ({preco}).',

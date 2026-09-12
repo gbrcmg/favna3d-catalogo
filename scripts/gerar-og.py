@@ -74,7 +74,7 @@ y += 56
 d.text((M, y), "Vasos, luminárias e objetos de casa,", font=f_sub, fill=CARVAO)
 d.text((M, y + 30), "impressos camada por camada.", font=f_sub, fill=CARVAO)
 
-d.text((M, H - 58), "Vila Velha, ES", font=f_miudo, fill=TITANIO)
+d.text((M, H - 58), "Manufatura aditiva sustentável", font=f_miudo, fill=TITANIO)
 
 lona.save("og-favna-catalogo.jpg", "JPEG", quality=88, optimize=True)
 print("gerado", lona.size, "| logo:", logo.size)

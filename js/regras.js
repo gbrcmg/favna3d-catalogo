@@ -272,6 +272,41 @@
       });
   }
 
+  // Como cada acabamento se chama no rótulo da faixa.
+  const ROTULO_ACABAMENTO = {
+    fosco: 'fosco',
+    silk: 'acetinado',
+    marmorizado: 'mesclado',
+    transparente: 'translúcido',
+  };
+
+  /**
+   * REQ-20 — rótulo curto da faixa de cores, montado do próprio catálogo:
+   * "11 cores · fosco, acetinado, mesclado e translúcido".
+   *
+   * Sai dos dados para nunca mentir: acrescentar uma cor nova atualiza a
+   * contagem e, se for de um acabamento inédito, ele entra na lista sozinho.
+   * Texto escrito à mão aqui envelheceria no primeiro cadastro.
+   */
+  function resumoDaPaleta(catalogo) {
+    const cores = paletaOrdenada(catalogo);
+    if (!cores.length) return '';
+
+    const acabamentos = [];
+    cores.forEach(function (c) {
+      const r = ROTULO_ACABAMENTO[c.acabamento] || c.acabamento;
+      if (acabamentos.indexOf(r) === -1) acabamentos.push(r);
+    });
+
+    const quantas = cores.length === 1 ? '1 cor' : cores.length + ' cores';
+    if (!acabamentos.length) return quantas;
+
+    const lista = acabamentos.length === 1
+      ? acabamentos[0]
+      : acabamentos.slice(0, -1).join(', ') + ' e ' + acabamentos[acabamentos.length - 1];
+    return quantas + ' · ' + lista;
+  }
+
   /**
    * REQ-19 — estado do carrossel de cores a partir da rolagem.
    *
@@ -351,6 +386,7 @@
     slugDeCor: slugDeCor,
     luminanciaDe: luminanciaDe,
     paletaOrdenada: paletaOrdenada,
+    resumoDaPaleta: resumoDaPaleta,
     progressoCarrossel: progressoCarrossel,
     amostraDeCor: amostraDeCor,
     numeroConfigurado: numeroConfigurado,

@@ -262,26 +262,31 @@ img { max-width: 100%; display: block; }
   vertical-align: 0.15em;
 }
 
-/* ---------- vitrine de cores (REQ-17) ---------- */
+/* ---------- faixa de cores (REQ-17, REQ-20) ----------
+   Mora antes das peças, então precisa ser contida: rótulo de uma linha em
+   vez de título e parágrafo. A seção inteira ocupa ~250px em vez dos ~400
+   da versão com cabeçalho, o que mantém a primeira peça ao alcance de uma
+   rolagem curta no celular. */
 
-.vitrine-cores { padding-bottom: 3.5rem; }
-
-.vitrine-cabeca {
-  padding: clamp(2rem, 6vw, 3rem) 0 clamp(1.25rem, 3vw, 1.75rem);
-  max-width: 44rem;
+.faixa-cores {
+  padding: clamp(0.5rem, 2vw, 1rem) 0 clamp(1.5rem, 4vw, 2.25rem);
+  border-bottom: 1px solid var(--linha);
+  margin-bottom: clamp(1.5rem, 4vw, 2.25rem);
 }
 
-.vitrine-cores h2 {
-  margin: 0;
-  font-family: var(--titulo);
-  font-weight: 600;
-  font-size: clamp(1.4rem, 4vw, 1.9rem);
-  letter-spacing: -0.01em;
+.cores-rotulo {
+  margin: 0 0 clamp(0.9rem, 2.5vw, 1.25rem);
+  font: 400 0.72rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--titanio);
 }
 
-.vitrine-intro {
-  margin: 0.85rem 0 0;
-  color: var(--carvao);
+.cores-nota {
+  margin: clamp(0.9rem, 2.5vw, 1.25rem) 0 0;
+  max-width: 40rem;
+  font-size: 0.8rem;
+  color: var(--titanio);
 }
 
 /* ---------- carrossel de cores (REQ-19) ----------

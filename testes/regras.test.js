@@ -566,3 +566,53 @@ test('REQ-19: medida ausente não quebra', () => {
     assert.equal(p.rola, false, 'sem medida, não rola');
   });
 });
+
+/* ============================================================
+   REQ-20 — rótulo da faixa de cores
+   ============================================================ */
+
+test('REQ-20: o rótulo conta as cores e lista os acabamentos', () => {
+  assert.equal(
+    R.resumoDaPaleta({
+      a: { nome: 'A', hex: '#111111', acabamento: 'fosco' },
+      b: { nome: 'B', hex: '#222222', acabamento: 'silk' },
+    }),
+    '2 cores · fosco e acetinado');
+});
+
+test('REQ-20: uma cor só fica no singular', () => {
+  assert.equal(
+    R.resumoDaPaleta({ a: { nome: 'A', hex: '#111111', acabamento: 'fosco' } }),
+    '1 cor · fosco');
+});
+
+test('REQ-20: acabamento repetido aparece uma vez', () => {
+  assert.equal(
+    R.resumoDaPaleta({
+      a: { nome: 'A', hex: '#111111', acabamento: 'fosco' },
+      b: { nome: 'B', hex: '#222222', acabamento: 'fosco' },
+      c: { nome: 'C', hex: '#333333', acabamento: 'fosco' },
+    }),
+    '3 cores · fosco');
+});
+
+test('REQ-20: três ou mais acabamentos usam vírgula e "e" no fim', () => {
+  const r = R.resumoDaPaleta(CORES);
+  assert.match(r, /^11 cores · /);
+  assert.ok(r.includes(', '), 'deveria separar por vírgula');
+  assert.ok(r.includes(' e '), 'o último deveria vir com "e"');
+  assert.ok(!r.includes(', e '), 'não deveria ter vírgula antes do "e"');
+});
+
+test('REQ-20: catálogo vazio não gera rótulo', () => {
+  assert.equal(R.resumoDaPaleta({}), '');
+  assert.equal(R.resumoDaPaleta(null), '');
+});
+
+test('REQ-20: acabamento desconhecido entra com o próprio nome', () => {
+  // Cor nova com acabamento que ainda não tem tradução não deve sumir do
+  // rótulo nem aparecer como "undefined".
+  assert.equal(
+    R.resumoDaPaleta({ a: { nome: 'A', hex: '#111111', acabamento: 'fluorescente' } }),
+    '1 cor · fluorescente');
+});

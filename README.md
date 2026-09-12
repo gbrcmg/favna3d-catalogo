@@ -50,10 +50,11 @@ sozinho. Foto do repositório é mais confiável e carrega mais rápido.
 
 ### A seção de cores
 
-A página tem uma seção **"As cores"**, no fim, com todo o catálogo de cores em
-um carrossel que desliza com o dedo: amostra, nome e acabamento. Ela se monta
+A página tem uma faixa de cores **antes da lista de peças**, com todo o catálogo
+em um carrossel que desliza com o dedo: amostra, nome e acabamento. Ela se monta
 sozinha a partir de `js/cores.js` — cadastrar uma cor nova já a faz aparecer lá,
-e o carrossel se ajusta à quantidade (com poucas cores, ele nem rola).
+o rótulo ("11 cores · fosco, acetinado…") se recalcula, e o carrossel se ajusta à
+quantidade (com poucas cores, ele nem rola).
 
 O endereço direto é útil no dia a dia: quando alguém pergunta que cores existem,
 mande
