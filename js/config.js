@@ -12,11 +12,11 @@ const CONFIG = {
   // Como conseguir: na planilha, Arquivo > Compartilhar > Publicar na web,
   // escolher SOMENTE a aba "Catalogo", formato CSV, e colar o link aqui.
   // Enquanto estiver vazio, o site usa o arquivo local dados/exemplo.csv.
-  CSV_URL: '',
+  CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vScPnvQDMKhtuHZMJ7VyBzv5p3sfhUheT9DMzGaGeyI3yq77BBGfnbc8ws1dsFuIFNOXpb2aPuJ3Qn5/pub?gid=0&single=true&output=csv',
 
   // true  = usa dados/exemplo.csv (para testar no computador)
   // false = usa a planilha publicada em CSV_URL
-  USAR_CSV_LOCAL: true,
+  USAR_CSV_LOCAL: false,
 
 
   /* ---- 2. Para onde vão os pedidos ------------------------- */
