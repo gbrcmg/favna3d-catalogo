@@ -46,6 +46,7 @@ impressora. **Ela nunca é publicada nem referenciada pelo site.**
 | REQ-12 | O repositório público contém **apenas** `catalogo/`. Nada da raiz `favna3d/` pode entrar: lá vivem uma credencial de sessão, a planilha de gestão e 19 GB de acervo pago | ✅ |
 | REQ-13 | Toda foto publicada é da FAVNA ou tem uso autorizado. Imagem feita pelo **criador do modelo** não vai ao ar como se fosse nossa | ⬜ |
 | REQ-14 | Foto de catálogo do **fornecedor de filamento** também não vai ao ar. A cor dela é extraída como dado; a foto fica em `assets/cores/`, fora deste repositório | ✅ |
+| REQ-21b | Foto publicada tem no máximo 1400 px no maior lado e 300 KB. `scripts/preparar-foto.py` garante — uma foto crua de celular tem 3,8 MB e inutilizaria a página em 4G fraco (REQ-56) | ✅ |
 
 > REQ-12 existe porque `git init` na raiz do projeto versionaria uma credencial
 > viva. Ver [Decisão 7](#decisões). Cumprido pelo `.gitignore` e auditado com
