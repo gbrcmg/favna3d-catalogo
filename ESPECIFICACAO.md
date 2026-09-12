@@ -6,7 +6,7 @@
 > Origem histórica: [`PROJETO_CATALOGO.md`](PROJETO_CATALOGO.md) — briefing do antigo
 > Projeto Gálice, de onde este catálogo nasceu. Vale como contexto, não como regra.
 >
-> **No ar:** https://gbrcmg.github.io/favna3d-catalogo/
+> **No ar:** https://favna3d.com.br/ (domínio próprio; o endereço antigo do GitHub Pages redireciona)
 > Repositório: `gbrcmg/favna3d-catalogo` · Última revisão: 2026-09-12
 
 ## Como ler o status

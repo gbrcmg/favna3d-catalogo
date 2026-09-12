@@ -1,6 +1,6 @@
 # Catálogo FAVNA 3D
 
-**No ar: https://gbrcmg.github.io/favna3d-catalogo/**
+**No ar: https://favna3d.com.br/** (também responde em https://gbrcmg.github.io/favna3d-catalogo/, que redireciona)
 
 Uma página pública que mostra as peças e leva o cliente pro WhatsApp.
 O conteúdo vem de uma planilha do Google — **mexer na planilha é suficiente
@@ -60,7 +60,7 @@ O endereço direto é útil no dia a dia: quando alguém pergunta que cores exis
 mande
 
 ```
-https://gbrcmg.github.io/favna3d-catalogo/#cores
+https://favna3d.com.br/#cores
 ```
 
 que abre a página já na seção.
