@@ -42,7 +42,7 @@ impressora. **Ela nunca é publicada nem referenciada pelo site.**
 | ID | Requisito | Status |
 |---|---|---|
 | REQ-10 | Não aparecem no site, no repositório nem no CSV: cliente, custo, margem, lucro, percentual de divisão, dado de caixa, link de modelo (Patreon/Printables) e observação interna | 🟡 |
-| REQ-11 | A publicação no Sheets é **só da aba `Catalogo`** — "Documento inteiro" exporia a aba `_estoque` e, por ela, a planilha principal | 🔒 |
+| REQ-11 | A publicação no Sheets é **só da aba `Catalogo`** — "Documento inteiro" exporia a aba `_estoque` e, por ela, a planilha principal | ✅ |
 | REQ-12 | O repositório público contém **apenas** `catalogo/`. Nada da raiz `favna3d/` pode entrar: lá vivem uma credencial de sessão, a planilha de gestão e 19 GB de acervo pago | ✅ |
 | REQ-13 | Toda foto publicada é da FAVNA ou tem uso autorizado. Imagem feita pelo **criador do modelo** não vai ao ar como se fosse nossa | ⬜ |
 
@@ -63,7 +63,7 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 
 | ID | Requisito | Status |
 |---|---|---|
-| REQ-01 | Trocar preço, foto, descrição ou esconder peça na planilha muda o site sem tocar em código | 🟡 |
+| REQ-01 | Trocar preço, foto, descrição ou esconder peça na planilha muda o site sem tocar em código | ✅ |
 | REQ-02 | Só linhas com `ativo` verdadeiro aparecem | ✅ |
 | REQ-03 | Ordem de exibição: `destaque` primeiro, depois `ordem` crescente, depois `nome` em pt-BR. `ordem` vazia vai para o fim | ✅ |
 | REQ-04 | Linha sem `id` ou sem `nome` é ignorada; o resto do catálogo carrega normalmente | ✅ |
@@ -125,12 +125,12 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 
 | ID | Requisito | Status |
 |---|---|---|
-| REQ-50 | Cada peça tem link direto `#/p/<id>`, que abre a página já no detalhe — é o link que vai no WhatsApp | 🟡 |
+| REQ-50 | Cada peça tem link direto `#/p/<id>`, que abre a página já no detalhe — é o link que vai no WhatsApp | ✅ |
 | REQ-51 | Usável em celular de tela pequena; a página **nunca** rola na horizontal | 🟡 |
 | REQ-52 | O detalhe fecha com `Esc`, prende o `Tab` enquanto aberto e devolve o foco de onde veio | 🟡 |
 | REQ-53 | HTML semântico, foco visível no teclado, contraste adequado e link "pular para as peças" | 🟡 |
 | REQ-54 | `prefers-reduced-motion` respeitado | 🟡 |
-| REQ-55 | Meta tags Open Graph para a prévia do link ficar apresentável no WhatsApp | 🟡 |
+| REQ-55 | Meta tags Open Graph para a prévia do link ficar apresentável no WhatsApp | ✅ |
 | REQ-56 | Página utilizável em 4G fraco; nenhuma biblioteca pesada | 🟡 |
 
 ---
@@ -177,6 +177,40 @@ cima disso, então o atraso que sobra é só o da republicação do lado do Goog
 | REQ-71 | As regras de negócio puras vivem em `js/regras.js`, isoladas do DOM, e têm teste automático em `testes/` | ✅ |
 | REQ-72 | Código, comentário e texto de interface em português do Brasil | 🟡 |
 | REQ-73 | A paleta e a tipografia vêm do `FAVNA_3D_Manual_de_Identidade_Visual_v2.md`, que tem prioridade sobre qualquer sugestão de design deste documento | ✅ |
+
+---
+
+## POC ponta a ponta — passou em 2026-09-12
+
+Planilha `Favna_Catalogo` (`1n89xfRLpx7DhACQo8QVUoRh4JuPzJ_kTpgJHUaFWcHE`), aba
+`Catalogo` publicada em CSV, lida pelo site em
+https://gbrcmg.github.io/favna3d-catalogo/
+
+**O critério, cumprido:** o preço do Cachepô Curva foi alterado na planilha e
+apareceu na página publicada **sem deploy, sem commit e sem tocar no GitHub** — o
+último commit continuou sendo o anterior à mudança. O valor de teste foi apagado
+em seguida: preço inventado não fica em página pública (decisão 6).
+
+De quebra, o teste exercitou em produção o caminho mais perigoso do projeto
+(REQ-06): a planilha guardou `149,9` com vírgula, e a página renderizou
+`R$ 149,90`.
+
+**Medições reais**, que substituem as estimativas:
+
+| O que | Medido |
+|---|---|
+| Escrita na planilha → CSV publicado | ~1 min (duas medições) |
+| Cache que o Google autoriza no CSV | `max-age=300` |
+| Build do Pages após push | ~1 min |
+| Cache do Pages no HTML | `max-age=600` |
+
+**O que o CSV do Google entrega, verificado:** 14 linhas, sem BOM, quebra de linha
+CRLF, acentuação intacta, e a coluna `ativo` com `NÃO` acentuado sendo lida
+corretamente pelo `ehSim`.
+
+**Ainda não provado:** a chegada do pedido no WhatsApp (falta o número, pendência
+1) e o comportamento com o Google fora do ar (REQ-41 a REQ-43), que só dá para
+testar derrubando a rede de propósito.
 
 ---
 
@@ -267,6 +301,6 @@ locais, mas **não deve ir para o GitHub Pages**.
 |---|---|---|
 | 1 | Base local: estrutura, config, CSVs, grade, filtro, busca, detalhe, WhatsApp | ✅ concluída |
 | 1.5 | **Spec como fonte da verdade + critérios executáveis** (REQ-71) | 🚧 em curso |
-| 2 | **POC ponta a ponta: planilha real, CSV publicado, queda de conexão** | 🚧 falta a planilha |
+| 2 | POC ponta a ponta: planilha real, CSV publicado | ✅ passou |
 | 3 | Publicação: repo próprio, GitHub Pages, og:image | ✅ no ar |
 | 4 | Só se pedido: QR code para as parceiras, pedido multi-item, domínio próprio | ⬜ |
