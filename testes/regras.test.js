@@ -373,3 +373,64 @@ test('REQ-10: o produto exposto só tem campos públicos', () => {
     'destaque', 'specs'];
   assert.deepEqual(Object.keys(p).sort(), permitidos.slice().sort());
 });
+
+/* ============================================================
+   REQ-15 / REQ-16 — catálogo de cores
+   ============================================================ */
+
+const CORES = require('../js/cores.js');
+
+test('REQ-15: o nome da planilha vira o slug do arquivo da foto', () => {
+  assert.equal(R.slugDeCor('Terracota'), 'terracota');
+  assert.equal(R.slugDeCor('Vermelho fosco'), 'vermelho-fosco');
+  assert.equal(R.slugDeCor('Ouro Envelhecido Silk'), 'ouro-envelhecido-silk');
+  assert.equal(R.slugDeCor('Verde Oliva'), 'verde-oliva');
+});
+
+test('REQ-15: acento, caixa e espaço extra não impedem o casamento', () => {
+  // Quem digita na planilha não deveria ter que acertar a grafia exata.
+  assert.equal(R.slugDeCor('BORDÔ'), 'bordo');
+  assert.equal(R.slugDeCor('  Marrom   Chocolate  '), 'marrom-chocolate');
+  assert.equal(R.slugDeCor('Azul-Marinho'), 'azul-marinho');
+  assert.equal(R.slugDeCor('Preto Matte'), 'preto-matte');
+});
+
+test('REQ-15: cor cadastrada devolve hex e acabamento', () => {
+  const a = R.amostraDeCor('Terracota', CORES);
+  assert.ok(a, 'Terracota deveria estar no catálogo');
+  assert.match(a.hex, /^#[0-9A-F]{6}$/);
+  assert.equal(a.acabamento, 'fosco');
+});
+
+test('REQ-16: cor sem amostra devolve null, e a peça segue vendável', () => {
+  // A interface cai no rótulo de texto. Não é erro: é o estado normal
+  // enquanto o catálogo de cores não está completo.
+  assert.equal(R.amostraDeCor('Creme', CORES), null);
+  assert.equal(R.amostraDeCor('Cor Que Não Existe', CORES), null);
+  assert.equal(R.amostraDeCor('', CORES), null);
+  assert.equal(R.amostraDeCor(null, CORES), null);
+});
+
+test('REQ-16: sem catálogo carregado nada quebra', () => {
+  // Se js/cores.js falhar em carregar, o site continua de pé.
+  assert.equal(R.amostraDeCor('Terracota', null), null);
+  assert.equal(R.amostraDeCor('Terracota', undefined), null);
+});
+
+test('REQ-15: todo item do catálogo de cores está bem formado', () => {
+  const acabamentos = ['fosco', 'silk', 'marmorizado', 'transparente'];
+  const slugs = Object.keys(CORES);
+  assert.ok(slugs.length > 0, 'o catálogo de cores está vazio');
+  slugs.forEach((slug) => {
+    const c = CORES[slug];
+    assert.match(slug, /^[a-z0-9-]+$/, `slug inválido: ${slug}`);
+    assert.match(c.hex, /^#[0-9A-F]{6}$/, `hex inválido em ${slug}: ${c.hex}`);
+    assert.ok(c.nome, `falta nome em ${slug}`);
+    assert.ok(acabamentos.includes(c.acabamento),
+      `acabamento desconhecido em ${slug}: ${c.acabamento}`);
+    // O slug tem que sobreviver à ida e volta, senão o nome escrito na
+    // planilha nunca vai casar com este item.
+    assert.equal(R.slugDeCor(c.nome), slug,
+      `"${c.nome}" não volta para "${slug}"`);
+  });
+});

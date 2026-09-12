@@ -199,6 +199,31 @@
     return vistas;
   }
 
+  /* ---------- cores ---------- */
+
+  /**
+   * REQ-15 — transforma o nome escrito na planilha no slug do catálogo de
+   * cores: "Vermelho Fosco" -> "vermelho-fosco", "Ouro Envelhecido Silk" ->
+   * "ouro-envelhecido-silk". É o mesmo slug do nome do arquivo da foto, então
+   * acrescentar cor é só pôr a foto em assets/cores/ e rodar o script — sem
+   * tabela de tradução para alguém esquecer de atualizar.
+   */
+  function slugDeCor(nome) {
+    return normaliza(nome)
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  /**
+   * REQ-15 / REQ-16 — acha a cor no catálogo. Devolve null quando não existe,
+   * e aí a interface cai no rótulo de texto de sempre: cor sem amostra
+   * cadastrada continua vendável, só não ganha o disco.
+   */
+  function amostraDeCor(nome, catalogo) {
+    if (!nome || !catalogo) return null;
+    return catalogo[slugDeCor(nome)] || null;
+  }
+
   /* ---------- pedido ---------- */
 
   /** REQ-33 — 55 + DDD + número, só dígitos. Placeholder não passa. */
@@ -243,6 +268,8 @@
     situacao: situacao,
     filtraProdutos: filtraProdutos,
     categoriasDe: categoriasDe,
+    slugDeCor: slugDeCor,
+    amostraDeCor: amostraDeCor,
     numeroConfigurado: numeroConfigurado,
     montaMensagem: montaMensagem,
     linkWhatsApp: linkWhatsApp,

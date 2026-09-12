@@ -259,7 +259,18 @@ function desenhaDetalhe(produto) {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'cor';
-      b.textContent = cor;
+
+      // REQ-15/REQ-16 — amostra do filamento quando a cor está no catálogo;
+      // cor sem cadastro fica só com o rótulo, e continua vendável.
+      const amostra = Regras.amostraDeCor(cor, typeof CORES === 'undefined' ? null : CORES);
+      if (amostra) {
+        const disco = document.createElement('span');
+        disco.className = 'cor-disco ' + amostra.acabamento;
+        disco.style.setProperty('--cor', amostra.hex);
+        disco.setAttribute('aria-hidden', 'true');
+        b.appendChild(disco);
+      }
+      b.appendChild(document.createTextNode(cor));
       b.setAttribute('aria-pressed', String(i === 0));
       b.addEventListener('click', () => {
         estado.corEscolhida = cor;

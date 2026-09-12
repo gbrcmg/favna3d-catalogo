@@ -45,6 +45,7 @@ impressora. **Ela nunca é publicada nem referenciada pelo site.**
 | REQ-11 | A publicação no Sheets é **só da aba `Catalogo`** — "Documento inteiro" exporia a aba `_estoque` e, por ela, a planilha principal | ✅ |
 | REQ-12 | O repositório público contém **apenas** `catalogo/`. Nada da raiz `favna3d/` pode entrar: lá vivem uma credencial de sessão, a planilha de gestão e 19 GB de acervo pago | ✅ |
 | REQ-13 | Toda foto publicada é da FAVNA ou tem uso autorizado. Imagem feita pelo **criador do modelo** não vai ao ar como se fosse nossa | ⬜ |
+| REQ-14 | Foto de catálogo do **fornecedor de filamento** também não vai ao ar. A cor dela é extraída como dado; a foto fica em `assets/cores/`, fora deste repositório | ✅ |
 
 > REQ-12 existe porque `git init` na raiz do projeto versionaria uma credencial
 > viva. Ver [Decisão 7](#decisões). Cumprido pelo `.gitignore` e auditado com
@@ -93,6 +94,8 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-27 | Foto ausente ou quebrada vira placeholder neutro, sem quebrar o layout. Toda imagem tem `loading="lazy"` e `alt` com o nome da peça | 🟡 |
 | REQ-28 | A **ficha de fatiamento** (`specs`) aparece em mono/Cinza Titânio sobre a foto — é o elemento marcante do design | 🟡 |
 | REQ-29 | Preço formatado com `Intl.NumberFormat('pt-BR', BRL)` | ✅ |
+| REQ-15 | Cor do catálogo mostra uma **amostra de filamento** — disco com as linhas de camada, desenhado em CSS a partir do hex, sem imagem. O nome escrito na planilha casa com a amostra pelo slug, sem tabela de tradução | ✅ |
+| REQ-16 | Cor **sem** amostra cadastrada continua vendável: o botão vira só o rótulo de texto. Catálogo de cores incompleto é estado normal, não erro | ✅ |
 
 ---
 
@@ -177,6 +180,33 @@ cima disso, então o atraso que sobra é só o da republicação do lado do Goog
 | REQ-71 | As regras de negócio puras vivem em `js/regras.js`, isoladas do DOM, e têm teste automático em `testes/` | ✅ |
 | REQ-72 | Código, comentário e texto de interface em português do Brasil | 🟡 |
 | REQ-73 | A paleta e a tipografia vêm do `FAVNA_3D_Manual_de_Identidade_Visual_v2.md`, que tem prioridade sobre qualquer sugestão de design deste documento | ✅ |
+
+---
+
+## Catálogo de cores (REQ-14 a REQ-16)
+
+As fotos em `favna3d/assets/cores/` são material de divulgação do **fabricante do
+filamento**, com a marca dele visível. Não entram neste repositório. Dois motivos,
+e o segundo é de projeto, não jurídico:
+
+1. Republicar foto comercial de terceiro é o mesmo problema da pendência 9.
+2. **Elas não funcionam como amostra.** No tamanho que uma amostra ocupa na tela, o
+   que aparece é o carretel preto com o adesivo do fabricante — as dez ficariam
+   quase idênticas. E pesam ~900 KB cada, contra ~0 KB da amostra em CSS.
+
+Então `scripts/extrair-cores.py` lê as fotos, amostra a cor da **peça impressa**
+(terço direito da imagem, descartando fundo branco, carretel preto e o verde da
+etiqueta) e gera `js/cores.js` com nome, hex e acabamento. O disco é desenhado em
+CSS, com as linhas de camada da marca em dois tons para aparecer tanto no Bege
+quanto no Preto Matte.
+
+**Como acrescentar uma cor:** pôr a foto em `assets/cores/` com o nome em
+minúsculas e hífens (`verde-oliva.png`) e rodar o script. O nome escrito na
+planilha casa pelo mesmo slug — `Verde Oliva` acha `verde-oliva`, ignorando acento,
+caixa e espaço extra. Sem tabela de tradução para alguém esquecer de atualizar.
+
+O acabamento sai do nome do arquivo: `silk` ganha reflexo diagonal, `marmorizado`
+ganha mescla, `transparente` ganha o xadrez por baixo. O resto é fosco.
 
 ---
 

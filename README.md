@@ -48,6 +48,32 @@ Também funciona um link do Google Drive — mas o arquivo precisa estar
 compartilhado como "qualquer pessoa com o link". O site converte o endereço
 sozinho. Foto do repositório é mais confiável e carrega mais rápido.
 
+### Acrescentar uma cor
+
+Na planilha, a coluna `cores` é só texto, separado por ponto-e-vírgula:
+`Terracota; Verde Oliva`. Se a cor já estiver cadastrada, ela aparece no site
+com a **amostra do filamento** do lado do nome. Se não estiver, aparece só o
+nome — a peça continua vendável, não é erro.
+
+Para cadastrar uma cor nova (isso é tarefa de desenvolvedor, uma vez por cor):
+
+1. Pôr a foto do filamento em `favna3d/assets/cores/`, nome em minúsculas e
+   hífens: `verde-oliva.png`. Se o nome tiver `silk`, `marmorizado` ou
+   `transparente`, a amostra já sai com o acabamento certo.
+2. Rodar `python3 scripts/extrair-cores.py` — ele extrai a cor da peça impressa
+   na foto e atualiza `js/cores.js`.
+3. Commitar o `js/cores.js`.
+
+A foto do fornecedor **não** vai para o repositório: só a cor dela, como dado.
+
+Para conferir o que está cadastrado hoje:
+
+```bash
+python3 scripts/extrair-cores.py --conferir
+```
+
+Escrever `Verde Oliva`, `verde oliva` ou `VERDE-OLIVA` na planilha dá no mesmo.
+
 ### Mudar o preço
 
 Escreva só o número na coluna `preco`. Vale `35`, `35,00` ou `R$ 35,00`.
