@@ -52,13 +52,11 @@ package-lock.json
 __pycache__/
 *.pyc
 
-# páginas de conferência que eu gero ao revisar
+# Capturas e páginas de conferência que eu gero ao revisar.
+# Padrão largo de propósito: a lista nominal já deixou passar um arquivo.
+_*.png
+_*.html
 _amostras.*
-_poc.png
-_ao-vivo*.png
-_cores.png
-_local-*.png
-_final.png
 _topo.png
 _live.png
 _vitrine.png
