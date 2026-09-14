@@ -93,7 +93,7 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-25 | Detalhe da peça com todas as fotos, descrição, cores, ficha técnica e botão de pedido | 🟡 |
 | REQ-26 | `fotos` aceita caminho relativo, URL completa e link do Google Drive — este convertido para `thumbnail?id=<ID>&sz=w1000` | ✅ |
 | REQ-27 | Foto ausente ou quebrada vira placeholder neutro, sem quebrar o layout. Toda imagem tem `loading="lazy"` e `alt` com o nome da peça | 🟡 |
-| REQ-28 | A **ficha de fatiamento** (`specs`) aparece em mono/Cinza Titânio sobre a foto — é o elemento marcante do design | 🟡 |
+| REQ-28 | A **ficha técnica** (`specs`) aparece em mono/Cinza Titânio sobre a foto — é o elemento marcante do design. Desde 14/09/2026 traz **só a dimensão** (`120 × 112 × 98 mm`): material, altura de camada e peso saíram, por decisão do dono | 🟡 |
 | REQ-29 | Preço formatado com `Intl.NumberFormat('pt-BR', BRL)` | ✅ |
 | REQ-15 | Cor do catálogo mostra uma **amostra de filamento** — disco com as linhas de camada, desenhado em CSS a partir do hex, sem imagem. O nome escrito na planilha casa com a amostra pelo slug, sem tabela de tradução | ✅ |
 | REQ-16 | Cor **sem** amostra cadastrada continua vendável: o botão vira só o rótulo de texto. Catálogo de cores incompleto é estado normal, não erro | ✅ |
@@ -322,7 +322,7 @@ Nada aqui é código — são decisões e conteúdo que só vocês têm.
 
 | # | Pendência | Trava o quê |
 |---|---|---|
-| 1 | **Número de WhatsApp** (`js/config.js`, hoje `55DDDNUMERO`) | REQ-33: o site não tem botão de pedido até isso |
+| ~~1~~ | ~~Número de WhatsApp~~ — resolvido em 14/09/2026: `(19) 99982-7588` | ✅ |
 | 2 | Converter `Favna_Planilha.xlsx` para Planilhas Google, criar a `Favna_Catalogo` e publicar a aba em CSV | REQ-11, REQ-63 e a Fase 2 inteira |
 | 3 | Preço das outras 11 peças (a aba 🧮 Calculadora resolve) | REQ-06 na prática: hoje quase tudo é "sob consulta" |
 | 4 | Prazo de produção por peça | REQ-22: nenhuma peça mostra prazo |

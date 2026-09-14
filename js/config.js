@@ -22,10 +22,10 @@ const CONFIG = {
   /* ---- 2. Para onde vão os pedidos ------------------------- */
 
   // Número que recebe os pedidos, no formato 55 + DDD + número, só dígitos.
-  // Exemplo (fictício): '5527999998888'
-  // ATENÇÃO: enquanto estiver com o texto abaixo, o botão avisa que o número
-  // ainda não foi configurado em vez de abrir uma conversa errada.
-  WHATSAPP_NUMERO: '55DDDNUMERO',
+  // Aqui: (19) 99982-7588 → 55 + 19 + 999827588
+  // Sem um número válido de 12 ou 13 dígitos, o site mostra um aviso no lugar
+  // do botão, em vez de abrir uma conversa que não existe.
+  WHATSAPP_NUMERO: '5519999827588',
 
 
   /* ---- 3. Textos da marca ---------------------------------- */
