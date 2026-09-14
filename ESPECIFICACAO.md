@@ -325,7 +325,7 @@ Nada aqui é código — são decisões e conteúdo que só vocês têm.
 | ~~1~~ | ~~Número de WhatsApp~~ — resolvido em 14/09/2026: `(19) 99982-7588` | ✅ |
 | 2 | Converter `Favna_Planilha.xlsx` para Planilhas Google, criar a `Favna_Catalogo` e publicar a aba em CSV | REQ-11, REQ-63 e a Fase 2 inteira |
 | 3 | Preço das outras 11 peças (a aba 🧮 Calculadora resolve) | REQ-06 na prática: hoje quase tudo é "sob consulta" |
-| 4 | Prazo de produção por peça | REQ-22: nenhuma peça mostra prazo |
+| ~~4~~ | ~~Prazo de produção~~ — resolvido em 14/09/2026: **3 dias** em todas as peças | ✅ |
 | 5 | Cores disponíveis além da cor da foto | REQ-34 |
 | 6 | Foto real do Cachepô Curva — a atual é recorte de post, 432×541 | REQ-20 |
 | 7 | **Consignado conta como pronta entrega?** A aba 📦 Estoque soma as peças que estão nas lojas parceiras | REQ-21: pode prometer pronta entrega do que está na loja de outro |

@@ -114,7 +114,7 @@ quase tudo hoje.
 | `fotos` | não | Caminhos separados por `\|`. A primeira é a capa. |
 | `cores` | não | Separadas por ponto-e-vírgula: `Terracota; Osso`. O cliente escolhe e a cor entra na mensagem do WhatsApp. |
 | `personalizavel` | não | `SIM` avisa que a peça leva nome/texto e já abre espaço na mensagem. |
-| `prazo_dias` | não | Número. Vira "fica pronta em até N dias". |
+| `prazo_dias` | não | Número. Vira "fica pronta em até N dias", logo abaixo do preço. Hoje **3** em todas as peças. Só aparece quando a peça está sob encomenda — peça com estoque mostra "Pronta entrega" e o prazo não faz sentido. |
 | `disponivel` | não | **Fórmula** — não digitar à mão. Maior que 0 = "Pronta entrega". |
 | `destaque` | não | `SIM` joga a peça pro começo da página. |
 | `specs` | não | A ficha técnica em cima da foto: `PLA fosco · camada 0,20 mm · 120 × 112 × 98 mm`. |
