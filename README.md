@@ -91,6 +91,25 @@ python3 scripts/extrair-cores.py --conferir
 
 Escrever `Verde Oliva`, `verde oliva` ou `VERDE-OLIVA` na planilha dá no mesmo.
 
+### Mudar o prazo de produção
+
+O prazo vale para **todas** as peças e fica em um lugar só, em `js/config.js`:
+
+```js
+PRAZO_PRODUCAO_DIAS: 3,
+```
+
+Ele vira a linha "Sob encomenda · fica pronta em até 3 dias", logo abaixo do
+preço. Não preencha prazo na planilha: como quase tudo é sob encomenda com o
+mesmo prazo, repetir o número em cada linha só cria chance de esquecer uma na
+hora de mudar.
+
+A exceção tem saída: uma peça que demore mais pode ter o próprio número na
+coluna `prazo_dias`, que vence o padrão.
+
+> Mudar este número é mudança de **código**, não de planilha — precisa de commit
+> e leva ~1 minuto de build, mais o cache. Trocar preço continua sendo instantâneo.
+
 ### Mudar o preço
 
 Escreva só o número na coluna `preco`. Vale `35`, `35,00` ou `R$ 35,00`.
@@ -114,7 +133,7 @@ quase tudo hoje.
 | `fotos` | não | Caminhos separados por `\|`. A primeira é a capa. |
 | `cores` | não | Separadas por ponto-e-vírgula: `Terracota; Osso`. O cliente escolhe e a cor entra na mensagem do WhatsApp. |
 | `personalizavel` | não | `SIM` avisa que a peça leva nome/texto e já abre espaço na mensagem. |
-| `prazo_dias` | não | Número. Vira "fica pronta em até N dias", logo abaixo do preço. Hoje **3** em todas as peças. Só aparece quando a peça está sob encomenda — peça com estoque mostra "Pronta entrega" e o prazo não faz sentido. |
+| `prazo_dias` | não | **Deixe vazio.** O prazo padrão é do site (`js/config.js` → `PRAZO_PRODUCAO_DIAS`, hoje 3 dias) e vale para todas as peças. Use esta coluna só na exceção: a peça que demora mais que as outras. |
 | `disponivel` | não | **Fórmula** — não digitar à mão. Maior que 0 = "Pronta entrega". |
 | `destaque` | não | `SIM` joga a peça pro começo da página. |
 | `specs` | não | A ficha técnica em cima da foto: `PLA fosco · camada 0,20 mm · 120 × 112 × 98 mm`. |

@@ -616,3 +616,33 @@ test('REQ-20: acabamento desconhecido entra com o próprio nome', () => {
     R.resumoDaPaleta({ a: { nome: 'A', hex: '#111111', acabamento: 'fluorescente' } }),
     '1 cor · fluorescente');
 });
+
+/* ============================================================
+   REQ-22b — prazo de produção configurado no site
+   ============================================================ */
+
+test('REQ-22b: o prazo padrão do site vale sem nada na planilha', () => {
+  // O caso normal: quase toda peça é sob encomenda com o mesmo prazo, e a
+  // planilha não precisa saber disso.
+  const s = R.situacao({ disponivel: 0 }, { prazoPadrao: 3 });
+  assert.equal(s.texto, 'Sob encomenda · fica pronta em até 3 dias');
+  assert.equal(s.pronta, false);
+});
+
+test('REQ-22b: o prazo da peça vence o padrão do site', () => {
+  const s = R.situacao({ disponivel: 0, prazoDias: 10 }, { prazoPadrao: 3 });
+  assert.equal(s.texto, 'Sob encomenda · fica pronta em até 10 dias');
+});
+
+test('REQ-22b: sem padrão e sem prazo na peça, só "Sob encomenda"', () => {
+  assert.equal(R.situacao({ disponivel: 0 }, {}).texto, 'Sob encomenda');
+  assert.equal(R.situacao({ disponivel: 0 }, { prazoPadrao: 0 }).texto, 'Sob encomenda');
+  assert.equal(R.situacao({ disponivel: 0 }, { prazoPadrao: null }).texto, 'Sob encomenda');
+});
+
+test('REQ-22b: peça com estoque ignora o prazo, padrão ou não', () => {
+  // Prazo de produção não faz sentido para o que já está pronto.
+  assert.equal(R.situacao({ disponivel: 2 }, { prazoPadrao: 3 }).texto, 'Pronta entrega');
+  assert.equal(R.situacao({ disponivel: 2, prazoDias: 10 }, { prazoPadrao: 3 }).texto,
+    'Pronta entrega');
+});

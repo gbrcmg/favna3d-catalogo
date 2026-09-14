@@ -37,7 +37,10 @@ function configPedido() {
 }
 
 function situacaoDe(produto) {
-  return Regras.situacao(produto, { mostrarQuantidade: CONFIG.MOSTRAR_QUANTIDADE });
+  return Regras.situacao(produto, {
+    mostrarQuantidade: CONFIG.MOSTRAR_QUANTIDADE,
+    prazoPadrao: CONFIG.PRAZO_PRODUCAO_DIAS,
+  });
 }
 
 /* ---------- leitura do CSV ---------- */

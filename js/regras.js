@@ -158,6 +158,14 @@
   /**
    * REQ-21 / REQ-22 — pronta entrega x sob encomenda.
    * A quantidade exata só aparece com mostrarQuantidade ligado.
+   *
+   * REQ-22b — o prazo de produção vem de `prazoPadrao`, configurado uma vez
+   * no site. Quase tudo aqui é sob encomenda com o mesmo prazo, então repetir
+   * o número em toda linha da planilha seria dado redundante — e dado
+   * redundante diverge: bastaria esquecer uma linha ao mudar o prazo.
+   *
+   * A coluna `prazo_dias` continua valendo e **vence o padrão**, para a peça
+   * excepcional que demora mais que as outras.
    */
   function situacao(produto, opcoes) {
     const mostrarQuantidade = !!(opcoes && opcoes.mostrarQuantidade);
@@ -169,9 +177,10 @@
         pronta: true,
       };
     }
+    const prazo = produto.prazoDias || (opcoes && opcoes.prazoPadrao) || null;
     return {
-      texto: produto.prazoDias
-        ? 'Sob encomenda · fica pronta em até ' + produto.prazoDias + ' dias'
+      texto: prazo
+        ? 'Sob encomenda · fica pronta em até ' + prazo + ' dias'
         : 'Sob encomenda',
       pronta: false,
     };

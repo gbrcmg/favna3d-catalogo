@@ -87,7 +87,8 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 |---|---|---|
 | REQ-20 | Grade com foto de capa, nome, preço e situação de cada peça | 🟡 |
 | REQ-21 | `disponivel > 0` mostra "Pronta entrega". A quantidade exata aparece **só** se `MOSTRAR_QUANTIDADE` for `true` (padrão: `false`) | ✅ |
-| REQ-22 | Caso contrário mostra "Sob encomenda" e, havendo `prazo_dias`, "fica pronta em até N dias" | ✅ |
+| REQ-22 | Caso contrário mostra "Sob encomenda" e, havendo prazo, "fica pronta em até N dias" | ✅ |
+| REQ-22b | O prazo de produção é **configuração do site** (`PRAZO_PRODUCAO_DIAS`), não dado por peça: quase tudo é sob encomenda com o mesmo prazo, e repetir o número em cada linha da planilha só cria chance de divergência. A coluna `prazo_dias` continua existindo e **vence o padrão**, para a peça excepcional | ✅ |
 | REQ-23 | Filtro por categoria, montado a partir dos próprios dados — categoria nova na planilha cria botão sozinha | 🟡 |
 | REQ-24 | Busca por nome e descrição, ignorando acento e caixa ("cachepo" acha "Cachepô") | ✅ |
 | REQ-25 | Detalhe da peça com todas as fotos, descrição, cores, ficha técnica e botão de pedido | 🟡 |

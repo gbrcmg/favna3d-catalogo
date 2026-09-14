@@ -43,6 +43,14 @@ const CONFIG = {
   // false = mostra só "Pronta entrega". true = mostra "Pronta entrega (3)".
   MOSTRAR_QUANTIDADE: false,
 
+  // Prazo de produção, em dias, para peça sob encomenda. Vira a linha
+  // "Sob encomenda · fica pronta em até 3 dias", logo abaixo do preço.
+  // Vale para TODAS as peças — não precisa preencher nada na planilha.
+  // Uma peça que demore mais pode ter o próprio número na coluna
+  // `prazo_dias`, que vence este padrão.
+  // Deixe 0 ou null para não mostrar prazo nenhum.
+  PRAZO_PRODUCAO_DIAS: 3,
+
   // Guarda o último catálogo que carregou bem, para o site não ficar
   // vazio se o Google estiver fora do ar. Deixe true.
   USAR_CACHE_OFFLINE: true,
