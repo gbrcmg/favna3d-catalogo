@@ -35,14 +35,24 @@ Escreva `NÃO` na coluna `ativo`. A linha continua guardada; a peça some do sit
 
 ### Trocar a foto
 
-Coloque o arquivo na pasta `fotos/` do repositório e escreva o caminho na coluna
-`fotos`, assim: `fotos/vaso-ritmo-01.jpg`.
-
-Para mais de uma foto, separe com uma barra vertical `|`. **A primeira é a capa:**
+Cada peça tem **sua própria pasta** dentro de `fotos/`, com os arquivos numerados:
 
 ```
-fotos/vaso-01.jpg|fotos/vaso-02.jpg|fotos/vaso-03.jpg
+fotos/
+  cachepo-lua/
+    01.jpg    ← a capa
+    02.jpg
+    03.jpg
 ```
+
+Na coluna `fotos` da planilha, separe com barra vertical `|`. **A primeira é a capa:**
+
+```
+fotos/cachepo-lua/01.jpg|fotos/cachepo-lua/02.jpg|fotos/cachepo-lua/03.jpg
+```
+
+O jeito mais fácil é rodar `scripts/preparar-foto.py`, que cria a pasta, numera,
+comprime e imprime a linha pronta para colar.
 
 Também funciona um link do Google Drive — mas o arquivo precisa estar
 compartilhado como "qualquer pessoa com o link". O site converte o endereço

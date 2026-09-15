@@ -14,8 +14,12 @@ Uso:
   preparar-foto.py vaso-ritmo-01 foto.jpg --proporcao 1:1
   preparar-foto.py vaso-ritmo-01 foto.jpg --comecar-em 3   (não sobrescrever 01 e 02)
 
-Saída: fotos/<slug>-01.jpg, <slug>-02.jpg, ... na ordem dos arquivos dados.
+Saída: fotos/<slug>/01.jpg, 02.jpg, ... na ordem dos arquivos dados.
 A primeira é a capa, então passe a melhor primeiro.
+
+Uma pasta por peça: a pasta carrega a identidade e o arquivo carrega só a
+ordem. Assim dá para guardar alternativas e originais junto da peça sem
+poluir o diretório, e apagar uma peça é apagar uma pasta.
 """
 import argparse
 import os
@@ -110,11 +114,12 @@ def main():
         if not origem.exists():
             print(f"  ! não achei {origem}")
             continue
-        destino = DESTINO / f"{args.slug}-{i:02d}.jpg"
+        destino = DESTINO / args.slug / f"{i:02d}.jpg"
+        destino.parent.mkdir(parents=True, exist_ok=True)
         r = prepara(origem, destino, proporcao)
-        gerados.append(destino.name)
+        gerados.append(f"{args.slug}/{destino.name}")
         girou = " (girada pelo EXIF)" if r["girada"] else ""
-        print(f"  {destino.name:<32} {r['antes'][0]}x{r['antes'][1]} → "
+        print(f"  {args.slug}/{destino.name:<24} {r['antes'][0]}x{r['antes'][1]} → "
               f"{r['depois'][0]}x{r['depois'][1]}  "
               f"{r['peso_origem']/1024:.0f} KB → {r['peso']/1024:.0f} KB (q{r['q']}){girou}")
         if r["peso"] > PESO_MAXIMO:

@@ -93,6 +93,7 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-24 | Busca por nome e descrição, ignorando acento e caixa ("cachepo" acha "Cachepô") | ✅ |
 | REQ-25 | Detalhe da peça com todas as fotos, descrição, cores, ficha técnica e botão de pedido | 🟡 |
 | REQ-26 | `fotos` aceita caminho relativo, URL completa e link do Google Drive — este convertido para `thumbnail?id=<ID>&sz=w1000` | ✅ |
+| REQ-27b | As fotos moram em `fotos/<slug>/NN.jpg` — uma pasta por peça. A pasta carrega a identidade, o arquivo carrega só a ordem, e dá para guardar alternativas junto da peça sem poluir o que vai ao ar | ✅ |
 | REQ-27 | Foto ausente ou quebrada vira placeholder neutro, sem quebrar o layout. Toda imagem tem `loading="lazy"` e `alt` com o nome da peça | 🟡 |
 | REQ-28 | A **ficha técnica** (`specs`) aparece em mono/Cinza Titânio sobre a foto — é o elemento marcante do design. Desde 14/09/2026 traz **só a dimensão** (`120 × 112 × 98 mm`): material, altura de camada e peso saíram, por decisão do dono | 🟡 |
 | REQ-29 | Preço formatado com `Intl.NumberFormat('pt-BR', BRL)` | ✅ |
