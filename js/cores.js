@@ -48,6 +48,11 @@
     "hex": "#373737",
     "acabamento": "fosco"
   },
+  "rosa": {
+    "nome": "Rosa",
+    "hex": "#F199C9",
+    "acabamento": "fosco"
+  },
   "terracota": {
     "nome": "Terracota",
     "hex": "#B07768",

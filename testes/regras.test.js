@@ -597,8 +597,10 @@ test('REQ-20: acabamento repetido aparece uma vez', () => {
 });
 
 test('REQ-20: três ou mais acabamentos usam vírgula e "e" no fim', () => {
+  // A contagem vem do catálogo, não fixa no teste: cadastrar cor nova é
+  // evento normal e não pode quebrar a suíte.
   const r = R.resumoDaPaleta(CORES);
-  assert.match(r, /^11 cores · /);
+  assert.match(r, new RegExp(`^${Object.keys(CORES).length} cores · `));
   assert.ok(r.includes(', '), 'deveria separar por vírgula');
   assert.ok(r.includes(' e '), 'o último deveria vir com "e"');
   assert.ok(!r.includes(', e '), 'não deveria ter vírgula antes do "e"');
