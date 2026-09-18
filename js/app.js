@@ -413,7 +413,40 @@ function desenhaCasa(miolo) {
   const secoes = Regras.agrupaPorCategoria(estado.produtos, CONFIG.PECAS_POR_CATEGORIA);
   atualizaCabeca('O catálogo',
     `${doisDigitos(estado.produtos.length)} peças · ${secoes.length} categorias`, false);
+
+  const destaques = Regras.destaquesDe(estado.produtos);
+  if (destaques.length) miolo.appendChild(secaoDestaques(destaques));
+
   secoes.forEach((secao, i) => miolo.appendChild(prateleira(secao, i)));
+}
+
+/**
+ * A abertura da casa: as peças marcadas na planilha, em grade e não em
+ * prateleira. É de propósito — na grade o destaque vira a lâmina partida
+ * (foto inteira + painel de texto), que é o cartão mais forte que existe
+ * aqui, e o contraste com as fileiras uniformes de baixo dá o ritmo da
+ * página. Sem nenhum `destaque = SIM` na planilha, a seção não existe.
+ */
+function secaoDestaques(pecas) {
+  const el = document.createElement('section');
+  el.className = 'prateleira destaques';
+  el.id = 'destaques';
+
+  const cabeca = document.createElement('div');
+  cabeca.className = 'conteudo prateleira-cabeca';
+
+  const h3 = document.createElement('h3');
+  h3.className = 'prateleira-titulo';
+  h3.textContent = 'Em destaque';
+  cabeca.appendChild(h3);
+
+  const conta = document.createElement('p');
+  conta.className = 'prateleira-conta';
+  conta.textContent = `${doisDigitos(pecas.length)} peças`;
+  cabeca.appendChild(conta);
+
+  el.append(cabeca, gradeDe(pecas));
+  return el;
 }
 
 /**

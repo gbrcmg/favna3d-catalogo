@@ -350,6 +350,35 @@ test('REQ-36: o slug é o mesmo para cor e para categoria', () => {
 });
 
 /* ============================================================
+   REQ-38 — seção de destaques
+   ============================================================ */
+
+const comDestaque = R.montaCatalogo([
+  { id: 'a', nome: 'Peça A', categoria: 'Vasos', ativo: 'SIM', ordem: '2', destaque: 'SIM' },
+  { id: 'b', nome: 'Peça B', categoria: 'Vasos', ativo: 'SIM', ordem: '3' },
+  { id: 'c', nome: 'Peça C', categoria: 'Mesa', ativo: 'SIM', ordem: '1', destaque: 'SIM' },
+]);
+
+test('REQ-38: só as peças marcadas como destaque entram', () => {
+  assert.deepEqual(R.destaquesDe(comDestaque).map((p) => p.id), ['c', 'a']);
+});
+
+test('REQ-38: o destaque continua na prateleira da própria categoria', () => {
+  const secoes = R.agrupaPorCategoria(comDestaque);
+  const vasos = secoes.filter((s) => s.categoria === 'Vasos')[0];
+  assert.deepEqual(vasos.pecas.map((p) => p.id), ['a', 'b']);
+});
+
+test('REQ-38: sem destaque na planilha, a seção não existe', () => {
+  const semNenhum = R.montaCatalogo([
+    { id: 'x', nome: 'Peça X', categoria: 'Vasos', ativo: 'SIM' },
+  ]);
+  assert.deepEqual(R.destaquesDe(semNenhum), []);
+  assert.deepEqual(R.destaquesDe([]), []);
+  assert.deepEqual(R.destaquesDe(null), []);
+});
+
+/* ============================================================
    REQ-30 a REQ-33 — pedido pelo WhatsApp
    ============================================================ */
 

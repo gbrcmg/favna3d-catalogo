@@ -179,7 +179,7 @@ quase tudo hoje.
 | `personalizavel` | não | `SIM` avisa que a peça leva nome/texto e já abre espaço na mensagem. |
 | `prazo_dias` | não | **Deixe vazio.** O prazo padrão é do site (`js/config.js` → `PRAZO_PRODUCAO_DIAS`, hoje 3 dias) e vale para todas as peças. Use esta coluna só na exceção: a peça que demora mais que as outras. |
 | `disponivel` | não | **Fórmula** — não digitar à mão. Maior que 0 = "Pronta entrega". |
-| `destaque` | não | `SIM` joga a peça pro começo da página. |
+| `destaque` | não | `SIM` põe a peça na seção **Em destaque**, que abre a página inicial — e ela continua aparecendo na fileira da própria categoria. |
 | `specs` | não | A ficha técnica em cima da foto: `PLA fosco · camada 0,20 mm · 120 × 112 × 98 mm`. |
 
 ---

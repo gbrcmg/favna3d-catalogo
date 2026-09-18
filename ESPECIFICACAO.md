@@ -105,6 +105,7 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-18 | A seção tem link direto `#cores`, para mandar no WhatsApp quando o cliente pergunta que cores existem. Funciona mesmo se o catálogo de peças falhar: a vitrine não depende do CSV | ✅ |
 | REQ-36 | A home mostra **uma prateleira por categoria** (até `PECAS_POR_CATEGORIA`, hoje 6), cada uma com rubrica numerada e endereço próprio `#/c/<slug>`. Passando do limite aparece o "Ver as N", que leva à **página da categoria** — a grade inteira, na mesma página, por rota de hash. O slug é derivado do nome, sem cadastro; slug que não casa com categoria nenhuma cai na home em vez de mostrar página vazia | ✅ |
 | REQ-37 | A prateleira usa a **mesma mecânica do carrossel de cores** (REQ-19), no mesmo trecho de código: corte na borda, barra de posição e setas no desktop. Cabendo tudo na tela — o caso de toda categoria hoje, com 1 a 4 peças — setas e barra não aparecem e ela vira uma fileira comum. O recurso nasce dormindo e liga sozinho quando o catálogo crescer, sem commit | ✅ |
+| REQ-38 | A casa abre com uma seção **Em destaque**, montada das peças com `destaque = SIM` na planilha, em **grade** e não em prateleira: na grade o destaque vira a lâmina partida (foto inteira + painel de texto), e o contraste com as fileiras uniformes abaixo dá o ritmo da página. A peça em destaque **continua** na prateleira da própria categoria — tirá-la de lá deixaria a categoria incompleta para quem entra por ela. Sem nenhum `destaque = SIM`, a seção não existe | ✅ |
 
 ---
 

@@ -724,6 +724,22 @@ img { max-width: 100%; display: block; }
 .prateleira-tudo .seta-pedido { transition: transform 0.3s var(--curva); }
 .prateleira-tudo:hover .seta-pedido { transform: translateX(0.3rem); }
 
+/* A seção de destaques abre a casa: rubrica em terracota, grade em vez de
+   fileira, e um fio mais forte que o das categorias para ela ler como
+   abertura e não como mais uma prateleira. */
+.destaques .prateleira-cabeca { border-bottom-color: var(--terracota); }
+.destaques .prateleira-titulo { color: var(--terracota); }
+.destaques .grade { padding-bottom: 0; }
+
+.prateleira-conta {
+  flex: 0 0 auto;
+  margin: 0;
+  font: 400 0.66rem var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--titanio);
+}
+
 .vitrine { gap: var(--gap); }
 
 .vitrine-item { width: clamp(12rem, 60vw, 16.5rem); }

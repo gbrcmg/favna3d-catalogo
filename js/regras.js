@@ -246,6 +246,16 @@
   }
 
   /**
+   * As peças marcadas com `destaque` na planilha, na ordem em que já vêm
+   * (destaque primeiro, depois ordem e nome). Elas continuam aparecendo na
+   * prateleira da própria categoria: tirá-las de lá deixaria a categoria
+   * parecendo incompleta para quem entra por ela.
+   */
+  function destaquesDe(produtos) {
+    return (produtos || []).filter(function (p) { return !!p.destaque; });
+  }
+
+  /**
    * Agrupa o catálogo em seções por categoria, na mesma ordem em que as
    * categorias aparecem nos produtos (que já vêm ordenados por destaque,
    * ordem e nome). `limite` corta o que vai para a home; `total` e `temMais`
@@ -438,6 +448,7 @@
     slugDeCor: slugDeCor,
     categoriaPorSlug: categoriaPorSlug,
     agrupaPorCategoria: agrupaPorCategoria,
+    destaquesDe: destaquesDe,
     luminanciaDe: luminanciaDe,
     paletaOrdenada: paletaOrdenada,
     resumoDaPaleta: resumoDaPaleta,
