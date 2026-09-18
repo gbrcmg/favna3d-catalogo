@@ -21,81 +21,177 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Logo FAVNA 3D ao lado de um porta-objetos impresso em 3D sobre um aparador de madeira.">
 <meta property="og:locale" content="pt_BR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#FAF8F5">
+<!-- A página abre no Carvão da capa: a barra do navegador acompanha a chegada. -->
+<meta name="theme-color" content="#221F1E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Inter:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <a class="pular" href="#grade">Pular para as peças</a>
 
-<header class="topo">
-  <div class="faixa" aria-hidden="true"></div>
-  <div class="conteudo topo-interno">
-    <p class="marca" id="nome-loja">FAVNA 3D</p>
-    <h1 id="tagline">Atmosfera &amp; Forma</h1>
-    <p class="subtitulo" id="subtitulo"></p>
+<!-- Grão de superfície: a página inteira tem a textura fosca e granulada do
+     PEI texturizado (Manual v2, §acabamento de base). Fica por cima de tudo,
+     sem interceptar clique. -->
+<div class="grao" aria-hidden="true"></div>
+
+<!-- ============ CAPA ============
+     Único trecho escuro no topo — o chiaroscuro que as próprias fotos das
+     peças já fazem. As camadas ao fundo se constroem na chegada, como um
+     objeto saindo da mesa de impressão. -->
+<header class="capa" id="topo">
+  <div class="capa-fundo" aria-hidden="true">
+    <div class="capa-camadas"></div>
+    <div class="capa-luz"></div>
   </div>
-  <div class="faixa" aria-hidden="true"></div>
+
+  <div class="conteudo capa-interna">
+    <p class="capa-marca" id="nome-loja">FAVNA 3D</p>
+
+    <h1 class="capa-titulo" id="tagline">Atmosfera &amp; Forma</h1>
+
+    <p class="capa-subtitulo" id="subtitulo"></p>
+
+    <!-- Leitura de fatiador: os três números que o cliente pergunta primeiro.
+         Saem dos dados (catálogo, paleta e CONFIG), nunca escritos à mão. -->
+    <dl class="leitura" id="leitura">
+      <div class="leitura-item">
+        <dt>Peças</dt>
+        <dd id="leitura-pecas">—</dd>
+      </div>
+      <div class="leitura-item">
+        <dt>Cores</dt>
+        <dd id="leitura-cores">—</dd>
+      </div>
+      <div class="leitura-item">
+        <dt>Produção</dt>
+        <dd id="leitura-prazo">—</dd>
+      </div>
+    </dl>
+
+    <a class="capa-desce" href="#grade">
+      <span>Ver as peças</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 4v15m0 0l-6-6m6 6l6-6" fill="none" stroke="currentColor"
+              stroke-width="1.4" stroke-linecap="square"/>
+      </svg>
+    </a>
+  </div>
 </header>
 
-<main class="conteudo">
+<!-- ============ BARRA ============
+     Gruda no topo depois da capa. O fio de progresso é o mesmo gesto do
+     resto: a página se constrói camada por camada enquanto você rola. -->
+<div class="barra" id="barra">
+  <div class="progresso" aria-hidden="true"><span id="progresso-fio"></span></div>
 
-  <p class="aviso-topo" id="aviso-topo" hidden></p>
+  <div class="conteudo barra-interna">
+    <p class="barra-marca" aria-hidden="true">F&#8202;Λ&#8202;V&#8202;N&#8202;Λ</p>
 
-  <section class="controles" aria-label="Filtros do catálogo">
-    <div class="campo-busca">
+    <div class="filtros" id="filtros" role="group" aria-label="Categorias"></div>
+
+    <button type="button" class="busca-abre" id="busca-abre"
+            aria-expanded="false" aria-controls="busca-linha">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="square"/>
+      </svg>
+      <span class="oculto">Buscar peça</span>
+    </button>
+  </div>
+
+  <div class="busca-linha" id="busca-linha" hidden>
+    <div class="conteudo">
       <label class="oculto" for="busca">Buscar peça</label>
       <input type="search" id="busca" placeholder="Buscar por nome ou descrição" autocomplete="off">
     </div>
-    <div class="filtros" id="filtros" role="group" aria-label="Categorias"></div>
-  </section>
+  </div>
+</div>
 
-  <!-- Faixa de cores (REQ-17, REQ-20). Fica ANTES das peças de propósito:
-       no fim da página quase ninguém a via. Enxuta — rótulo curto em vez de
-       título e parágrafo — para não empurrar a primeira peça para fora da
-       primeira tela. Some sozinha se o catálogo de cores estiver vazio. -->
+<main>
+
+  <div class="conteudo">
+    <p class="aviso-topo" id="aviso-topo" hidden></p>
+  </div>
+
+  <!-- ============ FAIXA DE CORES (REQ-17 a REQ-20) ============
+       Fica ANTES das peças de propósito: no fim da página quase ninguém a
+       via. Em Carvão porque amostra de filamento aparece muito melhor sobre
+       fundo escuro — é a bandeja de cores do ateliê. Some sozinha se o
+       catálogo de cores estiver vazio. -->
   <section class="faixa-cores" id="cores" aria-labelledby="cores-rotulo" hidden>
-    <p class="cores-rotulo" id="cores-rotulo"></p>
+    <div class="conteudo">
+      <div class="cores-cabeca">
+        <p class="cores-rotulo" id="cores-rotulo"></p>
+        <p class="cores-nota">Na mão, o tom é mais quente e mineral do que a tela mostra.</p>
+      </div>
+    </div>
+
     <div class="carrossel">
       <button type="button" class="seta seta-antes" id="cor-antes"
-              aria-label="Ver cores anteriores" hidden>&lsaquo;</button>
+              aria-label="Ver cores anteriores" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </button>
       <ul class="paleta" id="paleta" tabindex="0" role="group"
           aria-label="Cores disponíveis — role para o lado para ver todas"></ul>
       <button type="button" class="seta seta-depois" id="cor-depois"
-              aria-label="Ver mais cores" hidden>&rsaquo;</button>
+              aria-label="Ver mais cores" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M9.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </button>
     </div>
-    <div class="barra-posicao" id="barra-posicao" aria-hidden="true" hidden>
-      <span class="barra-posicao-tento" id="barra-posicao-tento"></span>
+
+    <div class="conteudo">
+      <div class="barra-posicao" id="barra-posicao" aria-hidden="true" hidden>
+        <span class="barra-posicao-tento" id="barra-posicao-tento"></span>
+      </div>
     </div>
-    <p class="cores-nota">Na mão, o tom é mais quente e mineral do que a tela mostra.</p>
   </section>
 
-  <p id="carregando" class="estado">Carregando o catálogo…</p>
-  <p id="vazio" class="estado" hidden></p>
+  <!-- ============ GRADE ============ -->
+  <div class="conteudo">
+    <div class="grade-cabeca">
+      <h2 class="secao-titulo" id="grade-titulo">O catálogo</h2>
+      <p class="secao-conta" id="grade-conta" aria-live="polite"></p>
+    </div>
 
-  <section class="grade" id="grade" aria-label="Peças"></section>
+    <p id="carregando" class="estado">
+      <span class="estado-camadas" aria-hidden="true"></span>
+      Montando o catálogo…
+    </p>
+    <p id="vazio" class="estado" hidden></p>
 
+    <section class="grade" id="grade" aria-labelledby="grade-titulo"></section>
+  </div>
 
 </main>
 
 <footer class="rodape">
-  <div class="faixa" aria-hidden="true"></div>
-  <div class="conteudo">
-    <p class="assinatura">F&nbsp;Λ&nbsp;V&nbsp;N&nbsp;Λ &nbsp;—&nbsp;3&nbsp;D&nbsp;—</p>
+  <div class="conteudo rodape-interno">
+    <p class="assinatura">F&nbsp;Λ&nbsp;V&nbsp;N&nbsp;Λ</p>
+    <p class="assinatura-sub">— 3 D —</p>
     <p class="miudo">Impressão 3D autoral · Cada peça é feita camada por camada.</p>
     <p class="miudo"><a class="elo-cores" href="#cores">Ver as cores disponíveis</a></p>
   </div>
+  <div class="rodape-camadas" aria-hidden="true"></div>
 </footer>
 
-<!-- Detalhe do produto -->
-<div class="detalhe" id="detalhe" role="dialog" aria-modal="true" aria-labelledby="detalhe-titulo" hidden>
+<!-- ============ DETALHE DA PEÇA ============ -->
+<div class="detalhe" id="detalhe" role="dialog" aria-modal="true"
+     aria-labelledby="detalhe-titulo" hidden>
   <div class="detalhe-caixa">
-    <button type="button" class="detalhe-fecha" id="detalhe-fecha" aria-label="Fechar">✕</button>
+    <button type="button" class="detalhe-fecha" id="detalhe-fecha" aria-label="Fechar">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      </svg>
+    </button>
     <div class="detalhe-corpo" id="detalhe-corpo"></div>
   </div>
 </div>

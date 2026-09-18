@@ -95,7 +95,7 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-26 | `fotos` aceita caminho relativo, URL completa e link do Google Drive — este convertido para `thumbnail?id=<ID>&sz=w1000` | ✅ |
 | REQ-27b | As fotos moram em `fotos/<slug>/NN.jpg` — uma pasta por peça. A pasta carrega a identidade, o arquivo carrega só a ordem, e dá para guardar alternativas junto da peça sem poluir o que vai ao ar | ✅ |
 | REQ-27 | Foto ausente ou quebrada vira placeholder neutro, sem quebrar o layout. Toda imagem tem `loading="lazy"` e `alt` com o nome da peça | 🟡 |
-| REQ-28 | A **ficha técnica** (`specs`) aparece em mono/Cinza Titânio sobre a foto — é o elemento marcante do design. Desde 14/09/2026 traz **só a dimensão** (`120 × 112 × 98 mm`): material, altura de camada e peso saíram, por decisão do dono | 🟡 |
+| REQ-28 | A **ficha técnica** (`specs`) aparece em mono/Cinza Titânio sobre a foto — é o elemento marcante do design. Desde 14/09/2026 traz **só a dimensão** (`120 × 112 × 98 mm`): material, altura de camada e peso saíram, por decisão do dono. Desde 17/09/2026 ela é permanente no celular e surge no hover onde existe ponteiro fino, para não competir com a foto na grade | 🟡 |
 | REQ-29 | Preço formatado com `Intl.NumberFormat('pt-BR', BRL)` | ✅ |
 | REQ-15 | Cor do catálogo mostra uma **amostra de filamento** — disco com as linhas de camada, desenhado em CSS a partir do hex, sem imagem. O nome escrito na planilha casa com a amostra pelo slug, sem tabela de tradução | ✅ |
 | REQ-16 | Cor **sem** amostra cadastrada continua vendável: o botão vira só o rótulo de texto. Catálogo de cores incompleto é estado normal, não erro | ✅ |
@@ -315,6 +315,18 @@ testar derrubando a rede de propósito.
    existe fisicamente. Serve de exemplo vivo do mecanismo de esconder peça.
 9. **Regras puras separadas do DOM** (REQ-71). Não é gosto por arquitetura: é o que
    permite ter teste sem navegador, sem build e sem dependência.
+10. **A Decisão 5 foi revista em 17/09/2026, a pedido do dono** ("versão moderna
+   do frontend, com paralaxe"). O que continua valendo dela é a paleta e a
+   tipografia do Manual (REQ-73). O que caiu é a regra de abstinência —
+   "nenhum degradê, nenhuma animação de entrada" —, trocada por um critério de
+   motivo único: **todo efeito tem que ser a camada da impressão**. A capa se
+   constrói em camadas, o fio da barra é a barra de progresso de um fatiamento,
+   a peça se revela ao entrar na tela, e o paralaxe move planos em velocidades
+   diferentes (fundo, luz, texto, foto dentro da moldura). Efeito que não
+   consegue justificar essa origem não entra. Duas amarras impedem que isso vire
+   template: `prefers-reduced-motion` desliga o movimento inteiro (REQ-54), e a
+   revelação tem rede de segurança por tempo — catálogo em branco por causa de
+   um efeito é falha de venda, não de estilo.
 
 ---
 

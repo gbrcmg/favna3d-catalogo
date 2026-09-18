@@ -1,11 +1,19 @@
 /* ============================================================
    FAVNA 3D — Catálogo
-   Paleta e tipografia vêm do Manual de Identidade Visual v2.
-   O elemento marcante é a FICHA DE FATIAMENTO (.ficha):
-   o dado técnico em mono sobre a foto. O resto fica sóbrio.
+   ------------------------------------------------------------
+   Paleta e tipografia vêm do Manual de Identidade Visual v2 e
+   têm prioridade sobre qualquer gosto de design (REQ-73).
+
+   A ideia que organiza a página: ela é uma PROVA DE FATIAMENTO.
+   Capa escura (o chiaroscuro que as próprias fotos fazem),
+   corpo em off-white cerâmico, bandeja de cores escura, rodapé
+   fechando escuro de novo. O grafismo é sempre o mesmo — as
+   linhas de camada da extrusão — e o dado técnico aparece em
+   mono, como leitura de fatiador (REQ-28).
    ============================================================ */
 
 :root {
+  /* ---- paleta do Manual ---- */
   --terracota:  #C87D55;
   --carvao:     #2C2A29;
   --offwhite:   #FAF8F5;
@@ -13,27 +21,43 @@
   --oliva:      #5E6850;
   --titanio:    #7A8288;
 
-  --linha:      #E6DFD6;   /* off-white escurecido: divisores */
+  /* ---- derivadas, para superfície ---- */
+  --breu:       #221F1E;   /* carvão mais fundo: capa, faixa de cores, rodapé */
+  --linha:      #E6DFD6;   /* off-white escurecido: divisores no claro */
   --papel:      #F3EFE9;   /* fundo das molduras de foto */
+  --linha-breu: rgb(250 248 245 / 0.13);
+  --texto-breu: #A8A099;   /* texto secundário sobre o escuro */
+  --terracota-claro: #D9926B;
 
   --titulo: 'Syne', 'Montserrat', system-ui, sans-serif;
   --corpo:  'Inter', 'Helvetica Neue', system-ui, sans-serif;
   --mono:   'JetBrains Mono', 'Courier New', monospace;
 
-  --largura: 1120px;
-  --gap: clamp(1rem, 3vw, 2rem);
+  --largura: 1240px;
+  --respiro: clamp(1rem, 4vw, 2rem);
+  --gap: clamp(0.75rem, 2.2vw, 1.75rem);
+  --barra-altura: 3.5rem;
+
+  --curva: cubic-bezier(0.22, 0.7, 0.3, 1);
 }
 
-* { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--barra-altura) + 1rem);
+}
 
 body {
   margin: 0;
   background: var(--offwhite);
   color: var(--carvao);
   font: 300 1rem/1.65 var(--corpo);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.005em;
+  /* `clip` e não `hidden`: hidden criaria um contexto de rolagem e o
+     position:sticky da barra passaria a se medir por ele (REQ-51). */
+  overflow-x: clip;
 }
 
 body.travado { overflow: hidden; }
@@ -41,7 +65,7 @@ body.travado { overflow: hidden; }
 img { max-width: 100%; display: block; }
 
 .conteudo {
-  width: min(100% - 2rem, var(--largura));
+  width: min(100% - (var(--respiro) * 2), var(--largura));
   margin-inline: auto;
 }
 
@@ -53,8 +77,9 @@ img { max-width: 100%; display: block; }
 
 .pular {
   position: absolute; left: -999px;
-  background: var(--carvao); color: var(--offwhite);
-  padding: 0.75rem 1rem; z-index: 100;
+  background: var(--terracota); color: var(--offwhite);
+  padding: 0.75rem 1rem; z-index: 200;
+  font: 500 0.85rem var(--corpo);
 }
 .pular:focus { left: 0.5rem; top: 0.5rem; }
 
@@ -63,102 +88,303 @@ img { max-width: 100%; display: block; }
   outline-offset: 3px;
 }
 
-/* ---------- faixa de camadas: o grafismo da marca ---------- */
+/* ---------- grão de superfície ----------
+   O acabamento da primeira camada é fosco e granulado (Manual v2). A página
+   inteira recebe esse mesmo grão: é o que separa "off-white de tela" de
+   "off-white cerâmico". Não intercepta clique nem entra na árvore de
+   acessibilidade. */
 
-.faixa {
-  height: 6px;
+.grao {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+  opacity: 0.085;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   CAPA
+   ============================================================ */
+
+.capa {
+  position: relative;
+  isolation: isolate;
+  background: var(--breu);
+  color: var(--offwhite);
+  overflow: hidden;
+}
+
+/* ---------- paralaxe ----------
+   Vários planos andando em velocidades diferentes dão à capa a mesma
+   profundidade que as fotos das peças têm: objeto à frente, luz atrás.
+   O JS só escreve a variável --py (em px); quem desenha é o CSS. Sob
+   `prefers-reduced-motion` o JS nunca escreve, e tudo fica em repouso. */
+
+.capa-fundo,
+.capa-luz,
+.capa-interna,
+.rodape-camadas {
+  transform: translate3d(0, var(--py, 0px), 0);
+  will-change: transform;
+}
+.faixa-cores::before { transform: translate3d(0, var(--py, 0px), 0); }
+
+/* Sobra de 15% em cima e embaixo para o plano poder deslizar sem descolar
+   das bordas da capa. */
+.capa-fundo { position: absolute; inset: -15% 0; z-index: -1; }
+
+/* As camadas da extrusão: o grafismo da marca em escala de fundo.
+   Elas "sobem" na chegada, como o objeto crescendo na mesa. */
+.capa-camadas {
+  position: absolute;
+  inset: 0;
   background: repeating-linear-gradient(
     to bottom,
-    var(--linha) 0 1px,
-    transparent 1px 3px
+    var(--linha-breu) 0 1px,
+    transparent 1px 7px
   );
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 62%, transparent);
+  animation: sobe-camadas 1.6s var(--curva) both;
 }
 
-/* ---------- topo ---------- */
-
-.topo-interno {
-  padding: clamp(2.5rem, 8vw, 4.5rem) 0 clamp(2rem, 6vw, 3.5rem);
-  text-align: center;
+@keyframes sobe-camadas {
+  from { transform: translateY(2.5rem); opacity: 0; }
+  to   { transform: none; opacity: 1; }
 }
 
-.marca {
-  margin: 0 0 1.25rem;
-  font-family: var(--titulo);
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.42em;
+/* Luz quente vinda de cima à direita — a mesma direção de luz das fotos. */
+.capa-luz {
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 120%;
+  background:
+    radial-gradient(52% 58% at 72% 18%, rgb(200 125 85 / 0.30), transparent 68%),
+    radial-gradient(70% 52% at 18% 92%, rgb(214 197 179 / 0.10), transparent 72%);
+}
+
+/* Grão próprio da capa: no escuro, o grão precisa clarear, não escurecer. */
+.capa-fundo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.capa-interna {
+  padding: clamp(4rem, 15vh, 8.5rem) 0 clamp(3rem, 9vh, 5.5rem);
+}
+
+/* Cada bloco da capa entra com um atraso próprio: uma chegada orquestrada
+   vale mais que cinco micro-animações espalhadas. */
+.capa-marca,
+.capa-titulo,
+.capa-subtitulo,
+.leitura,
+.capa-desce { animation: entra 0.9s var(--curva) both; }
+
+.capa-marca     { animation-delay: 0.10s; }
+.capa-titulo    { animation-delay: 0.18s; }
+.capa-subtitulo { animation-delay: 0.34s; }
+.leitura        { animation-delay: 0.46s; }
+.capa-desce     { animation-delay: 0.58s; }
+
+@keyframes entra {
+  from { opacity: 0; transform: translateY(1.1rem); }
+  to   { opacity: 1; transform: none; }
+}
+
+.capa-marca {
+  margin: 0 0 clamp(1.5rem, 5vh, 2.75rem);
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.44em;
   text-transform: uppercase;
-  color: var(--terracota);
+  color: var(--terracota-claro);
+}
+/* O fio curto antes da marca é o "corte" do Sliced V, reduzido a um traço. */
+.capa-marca::before {
+  content: '';
+  display: inline-block;
+  width: 2.25rem;
+  height: 1px;
+  margin-right: 0.9rem;
+  vertical-align: 0.3em;
+  background: var(--terracota);
 }
 
-.topo h1 {
+.capa-titulo {
   margin: 0;
   font-family: var(--titulo);
+  font-weight: 800;
+  /* Syne Extrabold é largo: a uma palavra de 9 letras, 12vw já estourava a
+     tela de 390px. A tagline vem da config e pode crescer, então além do
+     tamanho contido há quebra de palavra como rede de segurança. */
+  font-size: clamp(2.1rem, 10vw, 7.5rem);
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+/* O "&" (ou qualquer conectivo de uma letra) vira o acento da composição:
+   terracota, em itálico de um peso mais leve. */
+.capa-titulo .elo {
+  color: var(--terracota);
   font-weight: 600;
-  font-size: clamp(2rem, 7vw, 3.25rem);
-  line-height: 1.1;
-  letter-spacing: -0.01em;
+  font-style: italic;
 }
 
-.subtitulo {
-  margin: 1rem auto 0;
-  max-width: 34rem;
-  color: var(--titanio);
-  font-size: 0.95rem;
+.capa-subtitulo {
+  margin: clamp(1.25rem, 4vh, 2rem) 0 0;
+  max-width: 30rem;
+  color: var(--texto-breu);
+  font-size: clamp(0.95rem, 2.6vw, 1.1rem);
+  line-height: 1.6;
 }
 
-/* ---------- avisos de estado ---------- */
+/* ---- leitura de fatiador ---- */
 
-.aviso-topo {
-  margin: 1.5rem 0 0;
-  padding: 0.75rem 1rem;
-  border-left: 3px solid var(--titanio);
-  background: var(--papel);
-  font-size: 0.875rem;
-  color: var(--carvao);
-}
-.aviso-topo.erro     { border-left-color: var(--terracota); }
-.aviso-topo.atencao  { border-left-color: var(--bege); }
-
-/* ---------- controles ---------- */
-
-.controles {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: clamp(1.5rem, 4vw, 2.5rem) 0 clamp(1rem, 3vw, 1.5rem);
-}
-
-.campo-busca input {
-  width: 100%;
-  padding: 0.8rem 0;
-  border: 0;
-  border-bottom: 1px solid var(--linha);
-  background: transparent;
-  font: 300 1rem var(--corpo);
-  color: var(--carvao);
-}
-.campo-busca input::placeholder { color: var(--titanio); }
-.campo-busca input:focus {
-  outline: none;
-  border-bottom-color: var(--terracota);
-}
-
-.filtros {
+.leitura {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 0 clamp(1.75rem, 6vw, 4rem);
+  margin: clamp(2.25rem, 7vh, 3.5rem) 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--linha-breu);
+  max-width: 34rem;
 }
 
+.leitura-item { min-width: 5.5rem; }
+
+.leitura dt {
+  font: 400 0.63rem var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--titanio);
+}
+
+.leitura dd {
+  margin: 0.4rem 0 0;
+  font-family: var(--titulo);
+  font-weight: 700;
+  font-size: clamp(1.15rem, 3.6vw, 1.5rem);
+  letter-spacing: -0.01em;
+  color: var(--offwhite);
+}
+.leitura dd .unidade {
+  font: 400 0.68rem var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--texto-breu);
+  margin-left: 0.3rem;
+}
+
+.capa-desce {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: clamp(2.25rem, 7vh, 3.25rem);
+  color: var(--offwhite);
+  font: 400 0.72rem var(--mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--linha-breu);
+  transition: color 0.25s, border-color 0.25s;
+}
+.capa-desce svg { width: 1rem; height: 1rem; animation: pisca-desce 2.6s ease-in-out infinite; }
+.capa-desce:hover { color: var(--terracota-claro); border-bottom-color: var(--terracota); }
+
+@keyframes pisca-desce {
+  0%, 100% { transform: translateY(0); opacity: 0.75; }
+  50%      { transform: translateY(0.3rem); opacity: 1; }
+}
+
+/* ============================================================
+   BARRA (filtros + busca), grudada no topo
+   ============================================================ */
+
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgb(250 248 245 / 0.86);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  border-bottom: 1px solid var(--linha);
+  transition: box-shadow 0.3s;
+}
+.barra.encostada { box-shadow: 0 10px 30px -22px rgb(44 42 41 / 0.55); }
+
+/* Fio de progresso: a página se constrói camada por camada enquanto rola. */
+.progresso {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: transparent;
+  overflow: hidden;
+}
+.progresso span {
+  display: block;
+  height: 100%;
+  background: var(--terracota);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.barra-interna {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2.5vw, 1.5rem);
+  min-height: var(--barra-altura);
+}
+
+.barra-marca {
+  flex: 0 0 auto;
+  margin: 0;
+  font-family: var(--titulo);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.22em;
+  color: var(--carvao);
+  display: none;
+}
+
+/* ---- filtros ---- */
+
+.filtros {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0.6rem 1.5rem 0.6rem 0;
+  /* O corte à direita avisa que a fileira continua, sem precisar de seta. */
+  mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+}
+.filtros::-webkit-scrollbar { display: none; }
+
 .filtro {
+  flex: 0 0 auto;
   border: 1px solid var(--linha);
   background: transparent;
   color: var(--titanio);
-  font: 400 0.82rem var(--corpo);
-  padding: 0.4rem 0.85rem;
+  font: 400 0.72rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.42rem 0.9rem;
   border-radius: 999px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
 .filtro:hover { color: var(--carvao); border-color: var(--bege); }
 .filtro[aria-pressed="true"] {
@@ -167,19 +393,302 @@ img { max-width: 100%; display: block; }
   border-color: var(--carvao);
 }
 
+/* ---- busca ---- */
+
+.busca-abre {
+  flex: 0 0 auto;
+  width: 2.25rem; height: 2.25rem;
+  display: grid; place-items: center;
+  border: 1px solid var(--linha);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--carvao);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.busca-abre svg { width: 1.05rem; height: 1.05rem; }
+.busca-abre:hover { border-color: var(--bege); color: var(--terracota); }
+.busca-abre[aria-expanded="true"] {
+  background: var(--carvao);
+  border-color: var(--carvao);
+  color: var(--offwhite);
+}
+
+.busca-linha { border-top: 1px solid var(--linha); }
+.busca-linha[hidden] { display: none; }
+
+.busca-linha input {
+  width: 100%;
+  padding: 0.95rem 0;
+  border: 0;
+  background: transparent;
+  font: 300 1.05rem var(--corpo);
+  color: var(--carvao);
+}
+.busca-linha input::placeholder { color: var(--titanio); }
+.busca-linha input:focus { outline: none; }
+.busca-linha input::-webkit-search-cancel-button { filter: grayscale(1); }
+
+/* ============================================================
+   AVISOS E ESTADOS
+   ============================================================ */
+
+.aviso-topo {
+  margin: 1.75rem 0 0;
+  padding: 0.85rem 1.1rem;
+  border-left: 2px solid var(--titanio);
+  background: var(--papel);
+  font-size: 0.85rem;
+  color: var(--carvao);
+}
+.aviso-topo.erro    { border-left-color: var(--terracota); }
+.aviso-topo.atencao { border-left-color: var(--bege); }
+
 .estado {
-  padding: 3rem 0;
+  padding: clamp(3rem, 12vh, 6rem) 0;
   text-align: center;
+  color: var(--titanio);
+  font: 400 0.8rem var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Enquanto carrega, as camadas se empilham: a espera fala a língua da casa. */
+.estado-camadas {
+  display: block;
+  width: 3.5rem;
+  height: 1.75rem;
+  margin: 0 auto 1.25rem;
+  background: repeating-linear-gradient(
+    to bottom, var(--bege) 0 2px, transparent 2px 6px);
+  animation: empilha 1.5s var(--curva) infinite;
+}
+
+@keyframes empilha {
+  0%   { clip-path: inset(100% 0 0 0); opacity: 0.2; }
+  60%  { clip-path: inset(0 0 0 0);   opacity: 1; }
+  100% { clip-path: inset(0 0 0 0);   opacity: 0.2; }
+}
+
+/* A busca sem resultado é uma frase, não uma etiqueta de máquina. */
+#vazio {
+  font: 300 0.95rem/1.6 var(--corpo);
+  letter-spacing: 0;
+  text-transform: none;
+  max-width: 34rem;
+  margin-inline: auto;
+}
+
+/* ============================================================
+   FAIXA DE CORES (REQ-17 a REQ-20)
+   ============================================================ */
+
+.faixa-cores {
+  position: relative;
+  margin: clamp(2.5rem, 8vw, 5rem) 0 0;
+  padding: clamp(2.25rem, 6vw, 3.5rem) 0 clamp(2rem, 5vw, 3rem);
+  background: var(--breu);
+  color: var(--offwhite);
+  overflow: hidden;
+}
+.faixa-cores[hidden] { display: none; }
+
+.faixa-cores::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom, var(--linha-breu) 0 1px, transparent 1px 7px);
+  mask-image: linear-gradient(to bottom, #000, transparent 45%);
+  pointer-events: none;
+}
+
+.cores-cabeca {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: clamp(1.75rem, 4vw, 2.5rem);
+}
+
+.cores-rotulo {
+  margin: 0;
+  font: 500 0.72rem var(--mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--terracota-claro);
+}
+
+.cores-nota {
+  margin: 0;
+  max-width: min(26rem, 100%);
+  font-size: 0.82rem;
+  color: var(--texto-breu);
+}
+
+/* ---- carrossel (REQ-19) ----
+   Fileira que desliza com o dedo. O ponto fraco do formato é esconder o que
+   está fora da tela, então três coisas compensam: a próxima cor sempre
+   aparece cortada na borda, há barra de posição, e no desktop (sem gesto de
+   arrastar) aparecem setas. */
+
+.carrossel { position: relative; }
+
+.paleta {
+  list-style: none;
+  margin: 0;
+  /* O respiro lateral recoloca a primeira cor alinhada com o texto; à
+     direita sobra o corte que mostra a continuação. */
+  padding: 0 clamp(3rem, 10vw, 6rem) 0 max(var(--respiro), calc(50vw - var(--largura) / 2));
+  scroll-padding-inline: max(var(--respiro), calc(50vw - var(--largura) / 2)) 3rem;
+  display: flex;
+  gap: clamp(1.5rem, 4vw, 2.75rem);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.paleta::-webkit-scrollbar { display: none; }
+
+.paleta > .amostra {
+  flex: 0 0 auto;
+  width: clamp(5rem, 20vw, 6.5rem);
+  scroll-snap-align: start;
+}
+
+.amostra {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Herda tudo de .cor-disco — as camadas, o silk, o xadrez do translúcido —
+   e só cresce. Uma definição de amostra, dois tamanhos. O seletor duplo
+   vence o empate de especificidade com .cor-disco, declarado mais abaixo. */
+.amostra-disco.cor-disco {
+  width: clamp(3.25rem, 11vw, 4.25rem);
+  height: clamp(3.25rem, 11vw, 4.25rem);
+  margin: 0 auto 0.85rem;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.14),
+    0 10px 20px -12px rgb(0 0 0 / 0.8);
+  transition: transform 0.3s var(--curva);
+}
+.amostra:hover .amostra-disco.cor-disco { transform: translateY(-3px); }
+
+.amostra-nome {
+  margin: 0;
+  /* O nome ocupa 1 ou 2 linhas ("Ouro Envelhecido Silk"). Reservar as duas
+     mantém o acabamento alinhado na mesma linha em toda a fileira. */
+  min-height: 2.6em;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  color: var(--offwhite);
+}
+
+.amostra-acabamento {
+  margin: 0.15rem 0 0;
+  font: 400 0.6rem var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--titanio);
 }
 
-/* ---------- grade ---------- */
+/* Setas: só onde existe ponteiro fino (mouse). No celular o gesto basta, e
+   seta em tela pequena só rouba espaço da cor. */
+.seta {
+  display: none;
+  position: absolute;
+  top: clamp(1.4rem, 5vw, 2rem);
+  z-index: 2;
+  width: 2.4rem; height: 2.4rem;
+  border: 1px solid var(--linha-breu);
+  border-radius: 50%;
+  background: rgb(34 31 30 / 0.85);
+  backdrop-filter: blur(6px);
+  color: var(--offwhite);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.seta svg { width: 1rem; height: 1rem; }
+.seta:hover { color: var(--terracota-claro); border-color: var(--terracota); }
+.seta-antes  { left: clamp(0.5rem, 2vw, 1.25rem); }
+.seta-depois { right: clamp(0.5rem, 2vw, 1.25rem); }
+
+@media (hover: hover) and (pointer: fine) {
+  .seta:not([hidden]) { display: grid; place-items: center; }
+}
+
+/* Barra de posição: diz onde você está na fileira sem precisar de 11
+   bolinhas. Funciona para qualquer quantidade de cores. */
+.barra-posicao {
+  margin-top: clamp(1.25rem, 3vw, 1.75rem);
+  height: 1px;
+  background: var(--linha-breu);
+  overflow: hidden;
+}
+.barra-posicao[hidden] { display: none; }
+.barra-posicao-tento {
+  display: block;
+  height: 100%;
+  width: 28%;
+  background: var(--terracota);
+  transform: translateX(0);
+  transition: transform 0.2s ease-out;
+}
+
+/* ============================================================
+   GRADE DE PEÇAS
+   ============================================================ */
+
+.grade-cabeca {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin: clamp(2.75rem, 8vw, 5rem) 0 clamp(1.5rem, 4vw, 2.25rem);
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--linha);
+}
+
+.secao-titulo {
+  margin: 0;
+  font-family: var(--titulo);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
+  letter-spacing: -0.02em;
+}
+
+.secao-conta {
+  margin: 0;
+  font: 400 0.68rem var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--titanio);
+  white-space: nowrap;
+}
 
 .grade {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 255px), 1fr));
-  gap: var(--gap);
-  padding-bottom: 4rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: dense;     /* a peça em destaque abre buraco; isto fecha */
+  gap: var(--gap) var(--gap);
+  padding-bottom: clamp(3rem, 10vw, 6rem);
+}
+
+.peca {
+  position: relative;
+  opacity: 0;
+  transform: translateY(1.25rem);
+}
+.peca.vista {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.7s var(--curva), transform 0.7s var(--curva);
+  transition-delay: var(--atraso, 0s);
 }
 
 .peca-abre {
@@ -200,331 +709,332 @@ img { max-width: 100%; display: block; }
   background: var(--papel);
   overflow: hidden;
 }
-.peca-foto img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-.peca-abre:hover .peca-foto img,
-.peca-abre:focus-visible .peca-foto img { transform: scale(1.03); }
 
-/* placeholder neutro quando não há foto ou ela quebrou */
-.peca-foto.sem-foto::after,
-.galeria.sem-foto::after {
+/* A foto é 14% mais alta que a moldura: essa sobra é o curso da paralaxe.
+   O `scale` do hover entra pela variável --escala para não brigar com o
+   translate que o paralaxe escreve em --py. */
+.peca-foto img {
+  position: absolute;
+  top: -7%; left: 0; right: 0;
+  width: 100%; height: 114%;
+  object-fit: cover;
+  transform: translate3d(0, var(--py, 0px), 0) scale(var(--escala, 1));
+  transition: transform 0.9s var(--curva), opacity 0.6s var(--curva);
+}
+
+/* A segunda foto por baixo: no hover, a peça se vira. Quem não tem segunda
+   foto simplesmente não ganha o elemento — nada quebra. */
+.peca-foto .virada { opacity: 0; }
+.peca-abre:hover .peca-foto .capa-img,
+.peca-abre:focus-visible .peca-foto .capa-img { opacity: 0; }
+.peca-abre:hover .peca-foto .virada,
+.peca-abre:focus-visible .peca-foto .virada { opacity: 1; }
+.peca-abre:hover .peca-foto img,
+.peca-abre:focus-visible .peca-foto img { --escala: 1.05; }
+
+/* Véu inferior: só o suficiente para a ficha em mono se sustentar sobre
+   qualquer foto, clara ou escura. */
+.peca-foto::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 45%;
+  background: linear-gradient(to top, rgb(34 31 30 / 0.55), transparent);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.peca-foto.com-ficha::after { opacity: 1; }
+
+/* placeholder neutro quando não há foto ou ela quebrou (REQ-27) */
+.peca-foto.sem-foto::before,
+.galeria.sem-foto::before {
   content: '';
   position: absolute; inset: 0;
   background: repeating-linear-gradient(
-    to bottom, var(--linha) 0 1px, var(--papel) 1px 6px);
-  opacity: 0.7;
+    to bottom, var(--linha) 0 1px, var(--papel) 1px 7px);
+  opacity: 0.8;
 }
 .peca-foto.sem-foto img { display: none; }
 
-/* O ELEMENTO MARCANTE: ficha de fatiamento sobre a foto */
-.ficha {
+/* Índice da peça: a página é uma lista de trabalho, e cada peça tem número. */
+.peca-indice {
   position: absolute;
-  left: 0; bottom: 0;
-  margin: 0;
-  max-width: 100%;
-  padding: 0.4rem 0.6rem;
-  background: rgba(250, 248, 245, 0.92);
-  font: 400 0.66rem/1.35 var(--mono);
-  letter-spacing: 0.02em;
-  color: var(--titanio);
-  text-transform: uppercase;
+  top: 0.6rem; left: 0.7rem;
+  z-index: 2;
+  font: 500 0.62rem var(--mono);
+  letter-spacing: 0.14em;
+  color: var(--offwhite);
+  mix-blend-mode: difference;
 }
 
-.peca-info { padding-top: 0.85rem; }
+/* O ELEMENTO MARCANTE (REQ-28): ficha de fatiamento sobre a foto, em mono.
+   Desliza para dentro no hover em telas com ponteiro; no celular fica
+   sempre visível, porque lá não existe hover. */
+.ficha {
+  position: absolute;
+  left: 0.7rem; right: 0.7rem; bottom: 0.6rem;
+  z-index: 2;
+  margin: 0;
+  font: 400 0.6rem/1.4 var(--mono);
+  letter-spacing: 0.06em;
+  color: rgb(250 248 245 / 0.92);
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+
+.peca-info {
+  display: grid;
+  /* Em duas colunas de celular o cartão tem ~165px: nome e preço lado a lado
+     vazavam para o vizinho. Empilhado aqui, lado a lado só a partir de 760px. */
+  grid-template-columns: minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.15rem 0.75rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--linha);
+  margin-top: 0.85rem;
+  position: relative;
+}
+
+/* O fio terracota que corre sob o nome no hover: o "corte" acontecendo. */
+.peca-info::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 0;
+  height: 1px;
+  width: 100%;
+  background: var(--terracota);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--curva);
+}
+.peca-abre:hover .peca-info::before,
+.peca-abre:focus-visible .peca-info::before { transform: scaleX(1); }
 
 .peca-info h3 {
   margin: 0;
   font-family: var(--titulo);
   font-weight: 600;
-  font-size: 1.02rem;
-  letter-spacing: -0.005em;
+  font-size: clamp(0.92rem, 2.6vw, 1.05rem);
+  line-height: 1.25;
+  letter-spacing: -0.012em;
 }
 
-.preco {
-  margin: 0.3rem 0 0;
-  font-size: 0.95rem;
+.peca-info .preco {
+  margin: 0.35rem 0 0;
+  font: 400 0.82rem var(--mono);
   color: var(--carvao);
 }
-.preco.grande { font-size: 1.35rem; margin-top: 0.5rem; }
+
+.peca-info .situacao { grid-column: 1 / -1; }
 
 .situacao {
-  margin: 0.35rem 0 0;
-  font-size: 0.78rem;
-  color: var(--titanio);
-}
-.situacao.pronta { color: var(--oliva); }
-.situacao.pronta::before {
-  content: '● ';
-  font-size: 0.7em;
-  vertical-align: 0.15em;
-}
-
-/* ---------- faixa de cores (REQ-17, REQ-20) ----------
-   Mora antes das peças, então precisa ser contida: rótulo de uma linha em
-   vez de título e parágrafo. A seção inteira ocupa ~250px em vez dos ~400
-   da versão com cabeçalho, o que mantém a primeira peça ao alcance de uma
-   rolagem curta no celular. */
-
-.faixa-cores {
-  padding: clamp(0.5rem, 2vw, 1rem) 0 clamp(1.5rem, 4vw, 2.25rem);
-  border-bottom: 1px solid var(--linha);
-  margin-bottom: clamp(1.5rem, 4vw, 2.25rem);
-}
-
-.cores-rotulo {
-  margin: 0 0 clamp(0.9rem, 2.5vw, 1.25rem);
-  font: 400 0.72rem var(--mono);
+  margin: 0.3rem 0 0;
+  font: 400 0.66rem var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--titanio);
 }
-
-.cores-nota {
-  margin: clamp(0.9rem, 2.5vw, 1.25rem) 0 0;
-  max-width: 40rem;
-  font-size: 0.8rem;
-  color: var(--titanio);
-}
-
-/* ---------- carrossel de cores (REQ-19) ----------
-   Fileira que desliza com o dedo. O ponto fraco conhecido do formato é
-   esconder o que está fora da tela, então três coisas combatem isso: a
-   próxima cor sempre aparece cortada na borda, há barra de posição, e no
-   desktop (sem gesto de arrastar) aparecem setas. */
-
-.carrossel {
-  position: relative;
-  /* Sangra o respiro lateral do .conteudo (1rem), para o corte da próxima
-     cor acontecer na margem da tela e ficar claro que a fileira continua.
-     O padding-left do trilho recoloca a primeira cor alinhada com o texto.
-     Em tela larga esta sangria é inócua: são 16px além do container. */
-  margin-inline: -1rem;
-}
-
-.paleta {
-  list-style: none;
-  margin: 0;
-  padding: 0 2.5rem 0 1rem;   /* à esquerda, realinha; à direita, deixa o corte */
-  /* Sem isto, o scroll-snap alinha a primeira cor à borda INTERNA do
-     padding e a rolagem nasce em 16px, não em 0 — o que fazia a seta de
-     voltar aparecer já na chegada. O scroll-padding ensina o snap a
-     contar o respiro. */
-  scroll-padding-inline: 1rem 2.5rem;
-  display: flex;
-  gap: clamp(1.25rem, 4vw, 2.25rem);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
-  scrollbar-width: none;            /* Firefox */
-  -ms-overflow-style: none;
-}
-.paleta::-webkit-scrollbar { display: none; }
-
-.paleta > .amostra {
-  flex: 0 0 auto;
-  width: clamp(5.5rem, 22vw, 7rem);
-  scroll-snap-align: start;
-}
-
-/* Setas: só onde existe ponteiro fino (mouse). No celular o gesto basta,
-   e seta em tela pequena só rouba espaço da cor. */
-.seta {
-  display: none;
-  position: absolute;
-  top: clamp(1.6rem, 6vw, 2.2rem);
-  z-index: 2;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--linha);
+.situacao.pronta { color: var(--oliva); }
+.situacao.pronta::before {
+  content: '';
+  display: inline-block;
+  width: 5px; height: 5px;
+  margin-right: 0.45rem;
   border-radius: 50%;
-  background: var(--offwhite);
-  color: var(--carvao);
-  font: 400 1.1rem/1 var(--corpo);
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-.seta:hover { border-color: var(--bege); color: var(--terracota); }
-.seta-antes  { left: -0.5rem; }
-.seta-depois { right: -0.5rem; }
-
-@media (hover: hover) and (pointer: fine) {
-  .seta:not([hidden]) { display: grid; place-items: center; }
+  background: currentColor;
+  vertical-align: 0.1em;
 }
 
-/* Barra de posição: diz onde você está na fileira sem precisar de 11
-   bolinhas. Funciona para qualquer quantidade de cores. */
-.barra-posicao {
-  margin-top: clamp(1rem, 3vw, 1.5rem);
-  height: 2px;
-  background: var(--linha);
-  overflow: hidden;
-}
-.barra-posicao-tento {
-  display: block;
-  height: 100%;
-  width: 28%;
-  background: var(--terracota);
-  transform: translateX(0);
-  transition: transform 0.18s ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .barra-posicao-tento { transition: none; }
-}
+/* ============================================================
+   DETALHE DA PEÇA
+   ============================================================ */
 
-.amostra {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-/* O nome ocupa 1 ou 2 linhas ("Ouro Envelhecido Silk"). Reservar as duas
-   mantém o acabamento alinhado na mesma linha em toda a fileira. */
-.amostra-nome { min-height: 2.6em; }   /* 2 linhas x 1.3 de entrelinha */
-
-/* Herda tudo de .cor-disco — as camadas, o silk, o xadrez do translúcido —
-   e só cresce. Uma definição de amostra, dois tamanhos.
-   O seletor duplo é necessário: .cor-disco define 1.15rem e está declarado
-   mais abaixo neste arquivo, então com uma classe só ele venceria o empate
-   de especificidade e o disco sairia do tamanho do botão de peça. */
-.amostra-disco.cor-disco {
-  width: clamp(3.25rem, 11vw, 4.25rem);
-  height: clamp(3.25rem, 11vw, 4.25rem);
-  margin: 0 auto 0.7rem;
-  box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 0.1),
-    0 1px 2px rgb(44 42 41 / 0.07);
-}
-
-.amostra-nome {
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.3;
-  color: var(--carvao);
-}
-
-.amostra-acabamento {
-  margin: 0.2rem 0 0;
-  font: 400 0.64rem var(--mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--titanio);
-}
-
-.vitrine-nota {
-  margin: clamp(1.75rem, 4vw, 2.5rem) 0 0;
-  max-width: 40rem;
-  font-size: 0.85rem;
-  color: var(--titanio);
-}
-
-.elo-cores {
-  color: var(--titanio);
-  text-decoration-color: var(--linha);
-  text-underline-offset: 0.2em;
-}
-.elo-cores:hover { color: var(--terracota); }
-
-/* ---------- detalhe ---------- */
-
-/* display:grid venceria o [hidden] do navegador — por isso o reforço abaixo */
+/* display:grid venceria o [hidden] do navegador — por isso o reforço. */
 .detalhe[hidden] { display: none; }
 
 .detalhe {
   position: fixed; inset: 0;
-  z-index: 50;
+  z-index: 100;
   display: grid;
   place-items: end center;
-  background: rgba(44, 42, 41, 0.45);
-  overflow-y: auto;
-  padding: 0;
+  background: rgb(34 31 30 / 0.62);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: escurece 0.3s ease both;
 }
+
+@keyframes escurece { from { opacity: 0; } to { opacity: 1; } }
 
 .detalhe-caixa {
   position: relative;
-  width: min(100%, 960px);
+  width: min(100%, 1180px);
+  max-height: 94vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--offwhite);
-  margin-top: 2.5rem;
-  min-height: min-content;
+  animation: sobe-lamina 0.45s var(--curva) both;
+}
+
+@keyframes sobe-lamina {
+  from { transform: translateY(2.5rem); opacity: 0; }
+  to   { transform: none; opacity: 1; }
 }
 
 .detalhe-fecha {
   position: absolute;
-  top: 0.5rem; right: 0.5rem;
-  z-index: 2;
+  top: 0.75rem; right: 0.75rem;
+  z-index: 5;
   width: 2.5rem; height: 2.5rem;
+  display: grid; place-items: center;
   border: 0;
   border-radius: 50%;
-  background: rgba(250, 248, 245, 0.9);
+  background: rgb(250 248 245 / 0.92);
+  backdrop-filter: blur(6px);
   color: var(--carvao);
-  font-size: 1rem;
   cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
 }
-.detalhe-fecha:hover { background: var(--bege); }
+.detalhe-fecha svg { width: 1.05rem; height: 1.05rem; }
+.detalhe-fecha:hover { background: var(--bege); transform: rotate(90deg); }
 
-.detalhe-corpo {
-  display: grid;
-  grid-template-columns: 1fr;
-}
+.detalhe-corpo { display: grid; grid-template-columns: 1fr; }
+
+/* ---- galeria ---- */
+
+.galeria-bloco { background: var(--papel); }
+.galeria-quadro { position: relative; }
 
 .galeria {
   position: relative;
   display: flex;
-  gap: 2px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  background: var(--papel);
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   min-height: 240px;
 }
+.galeria::-webkit-scrollbar { display: none; }
+
 .galeria img {
   flex: 0 0 100%;
+  width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
   scroll-snap-align: start;
 }
 
-.detalhe-texto { padding: clamp(1.25rem, 4vw, 2.5rem); }
+/* Contador da galeria, em mono: "02 / 03". */
+.galeria-conta {
+  position: absolute;
+  left: 0.9rem; bottom: 0.9rem;
+  z-index: 2;
+  margin: 0;
+  padding: 0.3rem 0.6rem;
+  background: rgb(34 31 30 / 0.72);
+  color: var(--offwhite);
+  font: 400 0.63rem var(--mono);
+  letter-spacing: 0.14em;
+}
+
+.galeria-miniaturas {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  background: var(--papel);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.galeria-miniaturas::-webkit-scrollbar { display: none; }
+
+.miniatura {
+  flex: 0 0 auto;
+  width: 3.25rem; height: 3.25rem;
+  padding: 0;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.25s, border-color 0.25s;
+}
+.miniatura img { width: 100%; height: 100%; object-fit: cover; }
+.miniatura:hover { opacity: 0.85; }
+.miniatura[aria-current="true"] { opacity: 1; border-color: var(--terracota); }
+
+/* ---- texto do detalhe ---- */
+
+.detalhe-texto {
+  --pad: clamp(1.5rem, 5vw, 3rem);
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+}
 
 .categoria {
   margin: 0;
-  font: 400 0.72rem var(--corpo);
-  letter-spacing: 0.16em;
+  font: 500 0.66rem var(--mono);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--terracota);
 }
 
 .detalhe-texto h2 {
-  margin: 0.5rem 0 0;
+  margin: 0.75rem 0 0;
   font-family: var(--titulo);
-  font-weight: 600;
-  font-size: clamp(1.5rem, 4.5vw, 2.1rem);
-  line-height: 1.15;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 5.5vw, 2.6rem);
+  line-height: 1.08;
+  letter-spacing: -0.028em;
 }
 
+.preco-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.25rem;
+  margin-top: 1.1rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--linha);
+}
+
+.preco.grande {
+  margin: 0;
+  font-family: var(--titulo);
+  font-weight: 700;
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  letter-spacing: -0.015em;
+}
+
+.preco-linha .situacao { margin: 0; }
+
 .descricao {
-  margin: 1.25rem 0 0;
-  max-width: 46ch;
+  margin: 1.5rem 0 0;
+  max-width: 44ch;
   color: var(--carvao);
+  line-height: 1.75;
 }
 
 .ficha-detalhe {
   position: static;
-  display: inline-block;
-  margin: 1.25rem 0 0;
-  padding: 0.45rem 0.7rem;
+  display: block;
+  margin: 1.5rem 0 0;
+  padding: 0.7rem 0.9rem;
   background: var(--papel);
   border-left: 2px solid var(--bege);
-  text-transform: none;
-  font-size: 0.72rem;
+  color: var(--titanio);
+  text-shadow: none;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
 }
 
 .cores { margin-top: 1.75rem; }
 
 .rotulo-cor {
-  margin: 0 0 0.5rem;
-  font-size: 0.78rem;
+  margin: 0 0 0.7rem;
+  font: 400 0.66rem var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--titanio);
 }
 
@@ -533,31 +1043,98 @@ img { max-width: 100%; display: block; }
 .cor {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   border: 1px solid var(--linha);
   background: transparent;
   color: var(--titanio);
   font: 400 0.82rem var(--corpo);
-  padding: 0.35rem 0.8rem 0.35rem 0.5rem;
+  padding: 0.4rem 0.85rem 0.4rem 0.5rem;
+  border-radius: 999px;
   cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
 }
+.cor:hover { border-color: var(--bege); color: var(--carvao); }
 .cor[aria-pressed="true"] {
   border-color: var(--carvao);
   color: var(--carvao);
 }
 /* Sem amostra cadastrada o botão volta a ser só rótulo (REQ-16). */
-.cor:not(:has(.cor-disco)) { padding-left: 0.8rem; }
+.cor:not(:has(.cor-disco)) { padding-left: 0.85rem; }
 
-/* ---------- amostra de filamento (REQ-15) ----------
+.personalizavel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 1.5rem 0 0;
+  font-size: 0.88rem;
+  color: var(--oliva);
+}
+.personalizavel::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 1.1rem; height: 1.1rem;
+  margin-top: 0.2rem;
+  background: repeating-linear-gradient(
+    to bottom, currentColor 0 1px, transparent 1px 4px);
+  opacity: 0.6;
+}
+
+/* A ação fica colada no fim da lâmina: no celular, o botão nunca sai da
+   tela por causa de uma descrição longa. */
+.acao {
+  position: sticky;
+  bottom: 0;
+  margin: auto calc(var(--pad) * -1) calc(var(--pad) * -1);
+  padding-top: 1.1rem;
+  padding-inline: var(--pad);
+  padding-bottom: max(1.1rem, env(safe-area-inset-bottom));
+  background: rgb(250 248 245 / 0.94);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--linha);
+}
+
+.botao-pedido {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.05rem 1.5rem;
+  background: var(--carvao);
+  color: var(--offwhite);
+  font: 500 0.88rem var(--corpo);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: background 0.25s, transform 0.25s;
+}
+.botao-pedido .seta-pedido {
+  font: 400 0.75rem var(--mono);
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+  transition: transform 0.3s var(--curva);
+}
+.botao-pedido:hover { background: var(--terracota); }
+.botao-pedido:hover .seta-pedido { transform: translateX(0.35rem); }
+
+.aviso {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  background: var(--papel);
+  border-left: 2px solid var(--terracota);
+  font-size: 0.82rem;
+  color: var(--titanio);
+}
+
+/* ============================================================
+   AMOSTRA DE FILAMENTO (REQ-15)
    A cor vem do catálogo js/cores.js pela variável --cor. O disco é
    desenhado, não é imagem: zero requisição, e nenhuma foto do fornecedor
    publicada. As linhas horizontais são as camadas da impressão — o mesmo
-   motivo do grafismo da marca. */
+   motivo do grafismo da marca.
+   ============================================================ */
 
 .cor-disco {
   /* display explícito: como <span>, ele é inline por padrão e ignoraria
-     largura e altura. Dentro do botão .cor ele é item de flex e acaba
-     blockificado sem isto, mas na vitrine de cores não — e sumia. */
+     largura e altura. */
   display: block;
   position: relative;
   flex: 0 0 auto;
@@ -570,8 +1147,8 @@ img { max-width: 100%; display: block; }
 }
 
 /* Camadas da impressão. Duas linhas, uma clara e uma escura: sozinha, a
-   escura desaparece no Preto Matte e a clara desaparece no Bege. Juntas,
-   o relevo aparece em qualquer cor do catálogo. */
+   escura desaparece no Preto Matte e a clara desaparece no Bege. Juntas, o
+   relevo aparece em qualquer cor do catálogo. */
 .cor-disco::before {
   content: '';
   position: absolute;
@@ -621,85 +1198,195 @@ img { max-width: 100%; display: block; }
   opacity: 0.45;
 }
 
-.personalizavel {
-  margin: 1.25rem 0 0;
-  font-size: 0.88rem;
-  color: var(--oliva);
-}
+/* ============================================================
+   RODAPÉ
+   ============================================================ */
 
-.acao { margin-top: 2rem; }
-
-.botao-pedido {
-  display: inline-block;
-  padding: 0.95rem 1.9rem;
-  background: var(--carvao);
+.rodape {
+  position: relative;
+  margin-top: auto;
+  background: var(--breu);
   color: var(--offwhite);
-  font: 500 0.95rem var(--corpo);
-  text-decoration: none;
-  transition: background 0.15s;
-}
-.botao-pedido:hover { background: var(--terracota); }
-
-.aviso {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  background: var(--papel);
-  border-left: 3px solid var(--terracota);
-  font-size: 0.85rem;
-  color: var(--titanio);
+  overflow: hidden;
 }
 
-/* ---------- rodapé ---------- */
+.rodape-interno {
+  position: relative;
+  z-index: 1;
+  padding: clamp(3.5rem, 10vw, 6rem) 0 clamp(3rem, 8vw, 5rem);
+  text-align: center;
+}
 
-.rodape { margin-top: auto; }
-.rodape .conteudo { padding: 2.5rem 0 3.5rem; text-align: center; }
+/* O rodapé termina literalmente em camadas — a peça acabando de imprimir. */
+.rodape-camadas {
+  position: absolute;
+  inset: auto 0 0;
+  height: 6rem;
+  background: repeating-linear-gradient(
+    to bottom, var(--linha-breu) 0 1px, transparent 1px 7px);
+  mask-image: linear-gradient(to top, #000, transparent);
+}
 
 .assinatura {
   margin: 0;
   font-family: var(--titulo);
-  font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  color: var(--carvao);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 7vw, 2.5rem);
+  letter-spacing: 0.16em;
+  color: var(--offwhite);
+}
+
+.assinatura-sub {
+  margin: 0.5rem 0 0;
+  font: 400 0.68rem var(--mono);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: var(--terracota-claro);
 }
 
 .miudo {
-  margin: 0.6rem 0 0;
+  margin: 1.5rem 0 0;
   font-size: 0.78rem;
+  color: var(--texto-breu);
+}
+.miudo + .miudo { margin-top: 0.5rem; }
+
+.elo-cores {
+  color: var(--texto-breu);
+  text-decoration-color: rgb(250 248 245 / 0.25);
+  text-underline-offset: 0.25em;
+  transition: color 0.2s;
+}
+.elo-cores:hover { color: var(--terracota-claro); }
+
+/* ============================================================
+   TELAS MAIORES
+   ============================================================ */
+
+@media (min-width: 620px) {
+  /* A peça em destaque quebra a grade: ocupa duas colunas e vira uma lâmina
+     partida — foto inteira de um lado, painel de texto do outro. Recortar a
+     mesma foto 4:5 em paisagem decapitava o objeto; aqui ela entra no
+     enquadramento em que foi fotografada. */
+  .peca.destaque { grid-column: span 2; }
+
+  .peca.destaque .peca-abre {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    background: var(--papel);
+  }
+
+  .peca.destaque .peca-info {
+    align-content: center;
+    grid-template-columns: 1fr;
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+    margin-top: 0;
+    border-top: 0;
+  }
+
+  /* No cartão normal o fio do hover corre em cima; aqui ele desce pela
+     dobra entre a foto e o texto. */
+  .peca.destaque .peca-info::before {
+    top: 0; left: 0;
+    width: 1px; height: 100%;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  .peca.destaque .peca-abre:hover .peca-info::before,
+  .peca.destaque .peca-abre:focus-visible .peca-info::before { transform: scaleY(1); }
+
+  .peca.destaque .peca-info h3 { font-size: clamp(1.25rem, 2.6vw, 1.8rem); }
+  .peca.destaque .peca-info .preco { justify-self: start; margin-top: 0.75rem; }
+  .peca.destaque .peca-resumo { display: block; }
+}
+
+/* O resumo só existe na peça em destaque e só onde ela é partida em duas. */
+.peca-resumo {
+  display: none;
+  margin: 0.9rem 0 0;
+  max-width: 34ch;
+  font-size: 0.88rem;
+  line-height: 1.6;
   color: var(--titanio);
 }
 
-/* ---------- telas maiores ---------- */
+@media (min-width: 760px) {
+  .grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .barra-marca { display: block; }
 
-@media (min-width: 800px) {
-  .controles {
+  .peca-info { grid-template-columns: minmax(0, 1fr) auto; }
+  .peca-info .preco { margin-top: 0; justify-self: end; white-space: nowrap; }
+  .peca.destaque .peca-info { grid-template-columns: minmax(0, 1fr); }
+
+  .cores-cabeca {
     flex-direction: row;
-    align-items: center;
+    flex-wrap: wrap;
+    align-items: baseline;
     justify-content: space-between;
+    gap: 0.75rem 2rem;
   }
-  .campo-busca { flex: 0 1 18rem; }
-
-  .detalhe { place-items: center; padding: 2rem 1rem; }
-  .detalhe-caixa { margin-top: 0; }
-  .detalhe-corpo { grid-template-columns: 1.05fr 1fr; }
-  .galeria {
-    flex-direction: column;
-    overflow-x: hidden;
-    overflow-y: auto;
-    max-height: 78vh;
-    scroll-snap-type: y mandatory;
+  .peca-foto .ficha {
+    opacity: 0;
+    transform: translateY(0.4rem);
+    transition: opacity 0.4s, transform 0.4s var(--curva);
   }
-  .galeria img { flex: 0 0 auto; }
-  .detalhe-texto { align-self: start; max-height: 78vh; overflow-y: auto; }
+  .peca-abre:hover .peca-foto .ficha,
+  .peca-abre:focus-visible .peca-foto .ficha { opacity: 1; transform: none; }
+  .peca-foto.com-ficha::after { opacity: 0; }
+  .peca-abre:hover .peca-foto.com-ficha::after,
+  .peca-abre:focus-visible .peca-foto.com-ficha::after { opacity: 1; }
 }
 
-/* ---------- respeita quem pediu menos movimento ---------- */
+@media (min-width: 880px) {
+  /* A busca deixa de ser gaveta e vira campo permanente, alinhado à direita
+     da barra. Fica posicionada em vez de participar do flex para que a
+     fileira de filtros use toda a largura disponível e role por baixo dela. */
+  .busca-abre { display: none; }
+  .busca-linha,
+  .busca-linha[hidden] {
+    display: block;
+    position: absolute;
+    right: max(var(--respiro), calc(50vw - var(--largura) / 2));
+    top: 50%;
+    transform: translateY(-50%);
+    width: 11.5rem;
+    border-top: 0;
+    border-bottom: 1px solid var(--linha);
+  }
+  .busca-linha .conteudo { width: 100%; }
+  .busca-linha input { padding: 0.45rem 0; font-size: 0.9rem; }
+
+  .barra-interna .filtros {
+    padding-right: 13rem;
+    mask-image: linear-gradient(to right, #000 calc(100% - 14rem), transparent calc(100% - 12.5rem));
+  }
+
+  .detalhe { place-items: center; padding: clamp(1rem, 4vh, 2.5rem) var(--respiro); }
+  .detalhe-caixa { max-height: min(92vh, 900px); }
+  /* stretch para a coluna de texto acompanhar a altura da foto: é o que
+     leva o botão de pedido a fechar a lâmina na mesma linha da galeria. */
+  .detalhe-corpo { grid-template-columns: 1.1fr 1fr; align-items: stretch; }
+  .galeria-bloco { position: sticky; top: 0; align-self: start; }
+  .galeria img { aspect-ratio: 4 / 5; max-height: 75vh; }
+}
+
+@media (min-width: 1180px) {
+  .grade { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ============================================================
+   RESPEITA QUEM PEDIU MENOS MOVIMENTO (REQ-54)
+   ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-  .peca-abre:hover .peca-foto img { transform: none; }
+  .peca { opacity: 1; transform: none; }
+  .peca-abre:hover .peca-foto img { --escala: 1; }
 }

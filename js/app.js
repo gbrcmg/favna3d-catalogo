@@ -26,6 +26,9 @@ const estado = {
 
 const $ = (sel) => document.querySelector(sel);
 
+const semMovimento = window.matchMedia('(prefers-reduced-motion: reduce)');
+const telaLarga = window.matchMedia('(min-width: 880px)');
+
 /** Endereço da página sem o hash — entra na mensagem do WhatsApp (REQ-31). */
 function urlBase() {
   return location.origin + location.pathname;
@@ -40,6 +43,123 @@ function situacaoDe(produto) {
   return Regras.situacao(produto, {
     mostrarQuantidade: CONFIG.MOSTRAR_QUANTIDADE,
     prazoPadrao: CONFIG.PRAZO_PRODUCAO_DIAS,
+  });
+}
+
+/** Índice de peça sempre com dois dígitos: 01, 02… 14. */
+function doisDigitos(n) {
+  return String(n).padStart(2, '0');
+}
+
+/* ============================================================
+   PARALAXE
+   Um só laço, preso ao requestAnimationFrame do scroll, movendo vários
+   planos em velocidades diferentes. Cada elemento registrado recebe a
+   variável --py em px; quem desenha o translate é o CSS.
+
+   Quem pediu menos movimento (REQ-54) simplesmente não tem plano nenhum
+   registrado: o laço fica vazio e nada é escrito.
+   ============================================================ */
+
+const paralaxe = {
+  planos: [],
+  ativo: !semMovimento.matches,
+
+  /** velocidade em px: o curso total que o plano percorre na tela inteira. */
+  registra(el, velocidade) {
+    if (!this.ativo || !el) return;
+    this.planos.push({ el: el, v: velocidade });
+  },
+
+  /** A grade é redesenhada a cada filtro: planos órfãos saem daqui. */
+  limpaOrfaos() {
+    this.planos = this.planos.filter((p) => p.el.isConnected);
+  },
+
+  atualiza() {
+    if (!this.ativo) return;
+    const altura = window.innerHeight;
+    for (const plano of this.planos) {
+      const r = plano.el.getBoundingClientRect();
+      if (r.bottom < -300 || r.top > altura + 300) continue;
+      // -1 quando o elemento está entrando por baixo, +1 quando já saiu por
+      // cima; 0 no centro exato da tela.
+      const desvio = ((r.top + r.height / 2) - altura / 2) / altura;
+      plano.el.style.setProperty('--py', (desvio * plano.v).toFixed(2) + 'px');
+    }
+  },
+};
+
+/* ---------- laço único de scroll ---------- */
+
+let tiqueAgendado = false;
+
+function aoRolar() {
+  if (tiqueAgendado) return;
+  tiqueAgendado = true;
+  requestAnimationFrame(() => {
+    tiqueAgendado = false;
+    revelaVisiveis();
+    paralaxe.atualiza();
+    atualizaBarra();
+  });
+}
+
+/** Fio de progresso + sombra da barra quando ela desencosta da capa. */
+function atualizaBarra() {
+  const rolado = window.scrollY;
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  const fracao = total > 0 ? Math.min(1, Math.max(0, rolado / total)) : 0;
+
+  const fio = $('#progresso-fio');
+  if (fio) fio.style.transform = `scaleX(${fracao.toFixed(4)})`;
+
+  const barra = $('#barra');
+  if (barra) barra.classList.toggle('encostada', barra.getBoundingClientRect().top <= 0);
+
+  // A capa se afasta enquanto some: o conteúdo desbota antes de sair.
+  const capa = $('.capa-interna');
+  if (capa && paralaxe.ativo) {
+    const altura = window.innerHeight;
+    capa.style.opacity = String(Math.max(0, 1 - (rolado / altura) * 1.25));
+  }
+}
+
+/* ---------- leitura de fatiador (os números da capa) ---------- */
+
+function escreveLeitura(rotulo, valor, unidade) {
+  const alvo = $(rotulo);
+  if (!alvo) return;
+  alvo.textContent = valor;
+  if (unidade) {
+    const u = document.createElement('span');
+    u.className = 'unidade';
+    u.textContent = unidade;
+    alvo.appendChild(u);
+  }
+}
+
+function atualizaLeitura() {
+  const cores = Regras.paletaOrdenada(typeof CORES === 'undefined' ? null : CORES);
+  if (estado.produtos.length) escreveLeitura('#leitura-pecas', estado.produtos.length, 'no ar');
+  if (cores.length) escreveLeitura('#leitura-cores', cores.length, 'filamentos');
+
+  const prazo = CONFIG.PRAZO_PRODUCAO_DIAS;
+  escreveLeitura('#leitura-prazo', prazo ? `até ${prazo}` : 'sob', prazo ? 'dias' : 'consulta');
+}
+
+/** A tagline vem da config; o conectivo curto ("&") vira o acento em terracota. */
+function escreveTagline(texto) {
+  const h1 = $('#tagline');
+  if (!h1) return;
+  h1.textContent = '';
+  const palavras = String(texto || '').trim().split(/\s+/).filter(Boolean);
+  palavras.forEach((palavra, i) => {
+    const span = document.createElement('span');
+    if (/^[&+]$|^e$/i.test(palavra)) span.className = 'elo';
+    span.textContent = palavra;
+    h1.appendChild(span);
+    if (i < palavras.length - 1) h1.appendChild(document.createTextNode(' '));
   });
 }
 
@@ -122,9 +242,31 @@ function desenhaFiltros() {
 
 /* ---------- render: grade ---------- */
 
-function cartao(produto) {
+/* ---------- revelação em cascata ----------
+   A peça nasce transparente e aparece quando entra na tela. A varredura
+   mora no mesmo laço do paralaxe em vez de num IntersectionObserver à
+   parte: é uma medida por peça ainda não revelada (nunca mais de algumas
+   dezenas) e, principalmente, não existe o caso em que o observador não
+   dispara e o catálogo inteiro fica invisível. */
+
+let porRevelar = [];
+
+function revelaVisiveis() {
+  if (!porRevelar.length) return;
+  const limite = window.innerHeight * 0.94;
+  porRevelar = porRevelar.filter((peca) => {
+    if (peca.getBoundingClientRect().top > limite) return true;
+    peca.classList.add('vista');
+    return false;
+  });
+}
+
+function cartao(produto, indice) {
   const art = document.createElement('article');
-  art.className = 'peca';
+  art.className = 'peca' + (produto.destaque ? ' destaque' : '');
+  // A cascata escalona só dentro da fileira: a última peça de uma lista
+  // longa não pode ficar meio segundo atrasada.
+  art.style.setProperty('--atraso', `${(indice % 4) * 0.07}s`);
 
   const botao = document.createElement('button');
   botao.type = 'button';
@@ -133,21 +275,47 @@ function cartao(produto) {
 
   const moldura = document.createElement('div');
   moldura.className = 'peca-foto';
+
   if (produto.fotos[0]) {
     const img = document.createElement('img');
     img.src = produto.fotos[0];
     img.alt = produto.nome;
     img.loading = 'lazy';
+    img.decoding = 'async';
+    img.className = 'capa-img';
     img.addEventListener('error', () => moldura.classList.add('sem-foto'));
     moldura.appendChild(img);
+    paralaxe.registra(img, 22);
+
+    // Segunda foto: a peça se vira no hover. Quem não tem, não ganha.
+    if (produto.fotos[1]) {
+      const virada = document.createElement('img');
+      virada.src = produto.fotos[1];
+      virada.alt = '';
+      virada.setAttribute('aria-hidden', 'true');
+      virada.loading = 'lazy';
+      virada.decoding = 'async';
+      virada.className = 'virada';
+      virada.addEventListener('error', () => virada.remove());
+      moldura.appendChild(virada);
+      paralaxe.registra(virada, 22);
+    }
   } else {
     moldura.classList.add('sem-foto');
   }
+
+  const num = document.createElement('span');
+  num.className = 'peca-indice';
+  num.setAttribute('aria-hidden', 'true');
+  num.textContent = doisDigitos(indice + 1);
+  moldura.appendChild(num);
+
   if (produto.specs) {
     const ficha = document.createElement('p');
     ficha.className = 'ficha';
     ficha.textContent = produto.specs;
     moldura.appendChild(ficha);
+    moldura.classList.add('com-ficha');
   }
   botao.appendChild(moldura);
 
@@ -164,10 +332,24 @@ function cartao(produto) {
   sit.className = 'situacao' + (s.pronta ? ' pronta' : '');
   sit.textContent = s.texto;
   info.append(h3, preco, sit);
+
+  // A peça em destaque ocupa duas colunas e sobra espaço de texto: a
+  // primeira frase da descrição entra ali. O CSS esconde o resumo onde o
+  // cartão não é partido em dois.
+  if (produto.destaque && produto.descricao) {
+    const resumo = document.createElement('p');
+    resumo.className = 'peca-resumo';
+    const frase = produto.descricao.split(/(?<=[.!?])\s/)[0];
+    resumo.textContent = frase.length > 150 ? frase.slice(0, 147).trim() + '…' : frase;
+    info.appendChild(resumo);
+  }
+
   botao.appendChild(info);
 
   botao.addEventListener('click', () => abre(produto.id));
   art.appendChild(botao);
+
+  porRevelar.push(art);
   return art;
 }
 
@@ -178,6 +360,16 @@ function desenhaGrade() {
     busca: estado.busca,
   });
   alvo.innerHTML = '';
+  porRevelar = [];
+  paralaxe.limpaOrfaos();
+
+  const conta = $('#grade-conta');
+  if (conta) {
+    conta.textContent = !estado.produtos.length ? ''
+      : lista.length === estado.produtos.length
+        ? `${doisDigitos(lista.length)} peças`
+        : `${doisDigitos(lista.length)} de ${doisDigitos(estado.produtos.length)}`;
+  }
 
   if (!lista.length) {
     const vazio = $('#vazio');
@@ -188,7 +380,12 @@ function desenhaGrade() {
     return;
   }
   $('#vazio').hidden = true;
-  lista.forEach((p) => alvo.appendChild(cartao(p)));
+  lista.forEach((p, i) => alvo.appendChild(cartao(p, i)));
+  aoRolar();
+  // Rede de segurança: se por qualquer motivo o quadro de animação demorar,
+  // as peças que já estão na tela aparecem assim mesmo. Nunca um catálogo
+  // em branco por causa de um efeito.
+  setTimeout(revelaVisiveis, 400);
 }
 
 /* ---------- render: vitrine de cores (REQ-17) ---------- */
@@ -207,8 +404,8 @@ function desenhaPaleta() {
   const cores = Regras.paletaOrdenada(catalogo);
 
   // Sem catálogo de cores, a seção inteira não existe — e isso importa mais
-  // agora que ela fica antes das peças: um rótulo solto no topo seria pior
-  // que nada.
+  // agora que ela fica antes das peças: um rótulo solto no meio da página
+  // seria pior que nada.
   if (!cores.length) { secao.hidden = true; return; }
 
   // REQ-20 — o rótulo sai dos dados, nunca de texto fixo.
@@ -236,6 +433,8 @@ function desenhaPaleta() {
     alvo.appendChild(item);
   });
   secao.hidden = false;
+  // A trama de camadas do fundo desliza mais devagar que a faixa.
+  paralaxe.registra(secao, 60);
   ligaCarrossel();
 }
 
@@ -269,7 +468,7 @@ function ligaCarrossel() {
   // Um passo = a largura visível menos uma amostra, para a cor da borda
   // não ser pulada e servir de ponto de referência.
   const passo = () => Math.max(120, trilho.clientWidth - 110);
-  const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const suave = !semMovimento.matches;
 
   const anda = (sentido) => trilho.scrollBy({
     left: sentido * passo(),
@@ -286,26 +485,105 @@ function ligaCarrossel() {
 
 /* ---------- render: detalhe ---------- */
 
+/** Galeria com contador e miniaturas; arrasta no dedo, clica no desktop. */
+function montaGaleria(produto) {
+  const bloco = document.createElement('div');
+  bloco.className = 'galeria-bloco';
+
+  // O quadro existe para o contador se ancorar só na foto — ancorado no
+  // bloco inteiro, ele caía por cima das miniaturas.
+  const quadro = document.createElement('div');
+  quadro.className = 'galeria-quadro';
+
+  const galeria = document.createElement('div');
+  galeria.className = 'galeria';
+  galeria.id = 'galeria';
+
+  // Uma foto que quebra some da galeria; se já houver contador e miniaturas,
+  // eles se recontam. Com uma foto só, não há o que recontar — daí o gancho
+  // começar vazio em vez de apontar para algo que ainda não existe.
+  let aoQuebrarFoto = () => {};
+
+  const fotos = [];
+  produto.fotos.forEach((src, i) => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `${produto.nome} — foto ${i + 1}`;
+    img.loading = i === 0 ? 'eager' : 'lazy';
+    img.addEventListener('error', () => { img.remove(); aoQuebrarFoto(); });
+    galeria.appendChild(img);
+    fotos.push(img);
+  });
+  if (!fotos.length) galeria.classList.add('sem-foto');
+  quadro.appendChild(galeria);
+  bloco.appendChild(quadro);
+
+  if (fotos.length < 2) return bloco;   // uma foto só: nada a contar nem navegar
+
+  const conta = document.createElement('p');
+  conta.className = 'galeria-conta';
+  quadro.appendChild(conta);
+
+  const tiras = document.createElement('div');
+  tiras.className = 'galeria-miniaturas';
+
+  const atual = () => {
+    const largura = galeria.clientWidth || 1;
+    return Math.round(galeria.scrollLeft / largura);
+  };
+
+  function atualizaConta() {
+    const vivas = galeria.querySelectorAll('img');
+    const i = Math.min(atual(), vivas.length - 1);
+    conta.textContent = `${doisDigitos(i + 1)} / ${doisDigitos(vivas.length)}`;
+    tiras.querySelectorAll('.miniatura').forEach((b, n) =>
+      b.setAttribute('aria-current', String(n === i)));
+  }
+
+  fotos.forEach((img, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'miniatura';
+    b.setAttribute('aria-label', `Ver foto ${i + 1}`);
+    const mini = document.createElement('img');
+    mini.src = img.src;
+    mini.alt = '';
+    b.appendChild(mini);
+    b.addEventListener('click', () => vaiPara(i));
+    tiras.appendChild(b);
+  });
+  bloco.appendChild(tiras);
+
+  galeria.addEventListener('scroll', atualizaConta, { passive: true });
+  aoQuebrarFoto = atualizaConta;
+  atualizaConta();
+  return bloco;
+}
+
+/** Leva a galeria aberta para a foto N (usada pelas miniaturas e setas). */
+function vaiPara(indice) {
+  const galeria = $('#galeria');
+  if (!galeria) return;
+  const fotos = galeria.querySelectorAll('img');
+  const i = Math.max(0, Math.min(indice, fotos.length - 1));
+  galeria.scrollTo({
+    left: i * galeria.clientWidth,
+    behavior: semMovimento.matches ? 'auto' : 'smooth',
+  });
+}
+
+function andaGaleria(sentido) {
+  const galeria = $('#galeria');
+  if (!galeria) return;
+  const largura = galeria.clientWidth || 1;
+  vaiPara(Math.round(galeria.scrollLeft / largura) + sentido);
+}
+
 function desenhaDetalhe(produto) {
   const s = situacaoDe(produto);
   const corpo = $('#detalhe-corpo');
   corpo.innerHTML = '';
-
-  const galeria = document.createElement('div');
-  galeria.className = 'galeria';
-  if (produto.fotos.length) {
-    produto.fotos.forEach((src, i) => {
-      const img = document.createElement('img');
-      img.src = src;
-      img.alt = `${produto.nome} — foto ${i + 1}`;
-      img.loading = i === 0 ? 'eager' : 'lazy';
-      img.addEventListener('error', () => img.remove());
-      galeria.appendChild(img);
-    });
-  } else {
-    galeria.classList.add('sem-foto');
-  }
-  corpo.appendChild(galeria);
+  corpo.appendChild(montaGaleria(produto));
 
   const texto = document.createElement('div');
   texto.className = 'detalhe-texto';
@@ -318,15 +596,17 @@ function desenhaDetalhe(produto) {
   h2.id = 'detalhe-titulo';
   h2.textContent = produto.nome;
 
+  const linha = document.createElement('div');
+  linha.className = 'preco-linha';
   const preco = document.createElement('p');
   preco.className = 'preco grande';
   preco.textContent = Regras.formataPreco(produto.preco);
-
   const sit = document.createElement('p');
   sit.className = 'situacao' + (s.pronta ? ' pronta' : '');
   sit.textContent = s.texto;
+  linha.append(preco, sit);
 
-  texto.append(cat, h2, preco, sit);
+  texto.append(cat, h2, linha);
 
   if (produto.descricao) {
     const d = document.createElement('p');
@@ -349,8 +629,8 @@ function desenhaDetalhe(produto) {
     rotulo.textContent = 'Cor';
     bloco.appendChild(rotulo);
 
-    const linha = document.createElement('div');
-    linha.className = 'cores-linha';
+    const linhaCores = document.createElement('div');
+    linhaCores.className = 'cores-linha';
     produto.cores.forEach((cor, i) => {
       const b = document.createElement('button');
       b.type = 'button';
@@ -370,13 +650,13 @@ function desenhaDetalhe(produto) {
       b.setAttribute('aria-pressed', String(i === 0));
       b.addEventListener('click', () => {
         estado.corEscolhida = cor;
-        linha.querySelectorAll('.cor').forEach((o) =>
+        linhaCores.querySelectorAll('.cor').forEach((o) =>
           o.setAttribute('aria-pressed', String(o === b)));
         atualizaBotaoPedido(produto);
       });
-      linha.appendChild(b);
+      linhaCores.appendChild(b);
     });
-    bloco.appendChild(linha);
+    bloco.appendChild(linhaCores);
     texto.appendChild(bloco);
     estado.corEscolhida = produto.cores[0];
   } else {
@@ -420,7 +700,15 @@ function atualizaBotaoPedido(produto) {
   a.href = url;
   a.target = '_blank';
   a.rel = 'noopener';
-  a.textContent = 'Pedir pelo WhatsApp';
+
+  const rotulo = document.createElement('span');
+  rotulo.textContent = 'Pedir pelo WhatsApp';
+  const seta = document.createElement('span');
+  seta.className = 'seta-pedido';
+  seta.setAttribute('aria-hidden', 'true');
+  seta.textContent = '→';
+
+  a.append(rotulo, seta);
   alvo.appendChild(a);
 }
 
@@ -496,11 +784,47 @@ function mostraAviso(texto, tipo) {
   alvo.textContent = texto;
 }
 
+/* ---------- busca: gaveta no celular, campo fixo no desktop ---------- */
+
+function ligaBusca() {
+  const botao = $('#busca-abre');
+  const bloco = $('#busca-linha');
+  const campo = $('#busca');
+
+  const ajusta = () => {
+    // Em tela larga o campo é permanente: o atributo `hidden` sai, para o
+    // leitor de tela não anunciar como escondido o que está à vista.
+    if (telaLarga.matches) {
+      bloco.hidden = false;
+      botao.setAttribute('aria-expanded', 'true');
+    } else if (!estado.busca) {
+      bloco.hidden = true;
+      botao.setAttribute('aria-expanded', 'false');
+    }
+  };
+
+  botao.addEventListener('click', () => {
+    const abrindo = bloco.hidden;
+    bloco.hidden = !abrindo;
+    botao.setAttribute('aria-expanded', String(abrindo));
+    if (abrindo) campo.focus();
+    else { campo.value = ''; estado.busca = ''; desenhaGrade(); }
+  });
+
+  campo.addEventListener('input', () => {
+    estado.busca = campo.value;
+    desenhaGrade();
+  });
+
+  telaLarga.addEventListener('change', ajusta);
+  ajusta();
+}
+
 /* ---------- início ---------- */
 
 async function inicia() {
   $('#nome-loja').textContent = CONFIG.NOME_LOJA;
-  $('#tagline').textContent = CONFIG.TAGLINE;
+  escreveTagline(CONFIG.TAGLINE);
   $('#subtitulo').textContent = CONFIG.SUBTITULO;
   document.title = `${CONFIG.NOME_LOJA} — Catálogo`;
 
@@ -508,16 +832,29 @@ async function inicia() {
   $('#detalhe').addEventListener('click', (e) => { if (e.target.id === 'detalhe') fecha(); });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') fecha();
+    if (estado.aberto && e.key === 'ArrowLeft') andaGaleria(-1);
+    if (estado.aberto && e.key === 'ArrowRight') andaGaleria(1);
     prendeFoco(e);
   });
   window.addEventListener('popstate', aplicaHash);
 
-  const campo = $('#busca');
-  campo.addEventListener('input', () => { estado.busca = campo.value; desenhaGrade(); });
+  ligaBusca();
+
+  // Os planos de fundo da capa e do rodapé: o que anda mais depressa fica
+  // mais longe, como numa vitrine com profundidade.
+  paralaxe.registra($('.capa-fundo'), 150);
+  paralaxe.registra($('.capa-luz'), -90);      // a luz vem na direção contrária
+  paralaxe.registra($('.capa-interna'), 55);   // o texto atrasa em relação ao fundo
+  paralaxe.registra($('.rodape-camadas'), 70);
+
+  window.addEventListener('scroll', aoRolar, { passive: true });
+  window.addEventListener('resize', aoRolar);
+  aoRolar();
 
   // A vitrine de cores vem de js/cores.js, não do CSV: desenha antes do
   // fetch para continuar de pé mesmo se o catálogo de peças falhar.
   desenhaPaleta();
+  atualizaLeitura();
 
   try {
     await carrega();
@@ -537,6 +874,7 @@ async function inicia() {
     mostraAviso('Modo de teste: lendo dados/exemplo.csv, não a planilha.', 'atencao');
   }
 
+  atualizaLeitura();
   desenhaFiltros();
   desenhaGrade();
   aplicaHash();
