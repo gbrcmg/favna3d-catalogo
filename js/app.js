@@ -130,7 +130,7 @@ function atualizaBarra() {
   const capa = $('.capa-interna');
   if (capa && paralaxe.ativo) {
     const altura = window.innerHeight;
-    capa.style.opacity = String(Math.max(0, 1 - (rolado / altura) * 1.25));
+    capa.style.opacity = String(Math.max(0, 1 - (rolado / altura) * 2.4));
   }
 }
 
@@ -1128,9 +1128,9 @@ async function inicia() {
 
   // Os planos de fundo da capa e do rodapé: o que anda mais depressa fica
   // mais longe, como numa vitrine com profundidade.
-  paralaxe.registra($('.capa-fundo'), 150);
-  paralaxe.registra($('.capa-luz'), -90);      // a luz vem na direção contrária
-  paralaxe.registra($('.capa-interna'), 55);   // o texto atrasa em relação ao fundo
+  paralaxe.registra($('.capa-fundo'), 90);
+  paralaxe.registra($('.capa-luz'), -55);      // a luz vem na direção contrária
+  paralaxe.registra($('.capa-interna'), 32);   // o texto atrasa em relação ao fundo
   paralaxe.registra($('.rodape-camadas'), 70);
 
   window.addEventListener('scroll', aoRolar, { passive: true });

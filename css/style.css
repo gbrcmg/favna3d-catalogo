@@ -133,7 +133,7 @@ img { max-width: 100%; display: block; }
 
 /* Sobra de 15% em cima e embaixo para o plano poder deslizar sem descolar
    das bordas da capa. */
-.capa-fundo { position: absolute; inset: -15% 0; z-index: -1; }
+.capa-fundo { position: absolute; inset: -35% 0; z-index: -1; }
 
 /* As camadas da extrusão: o grafismo da marca em escala de fundo.
    Elas "sobem" na chegada, como o objeto crescendo na mesa. */
@@ -174,8 +174,10 @@ img { max-width: 100%; display: block; }
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* A capa é apresentação, não destino: ela cabe em pouco mais de um terço da
+   tela para o catálogo começar quase na primeira rolagem. */
 .capa-interna {
-  padding: clamp(4rem, 15vh, 8.5rem) 0 clamp(3rem, 9vh, 5.5rem);
+  padding: clamp(2rem, 5vh, 3rem) 0 clamp(2rem, 5vh, 3rem);
 }
 
 /* Cada bloco da capa entra com um atraso próprio: uma chegada orquestrada
@@ -183,14 +185,12 @@ img { max-width: 100%; display: block; }
 .capa-marca,
 .capa-titulo,
 .capa-subtitulo,
-.leitura,
-.capa-desce { animation: entra 0.9s var(--curva) both; }
+.leitura { animation: entra 0.9s var(--curva) both; }
 
 .capa-marca     { animation-delay: 0.10s; }
 .capa-titulo    { animation-delay: 0.18s; }
 .capa-subtitulo { animation-delay: 0.34s; }
 .leitura        { animation-delay: 0.46s; }
-.capa-desce     { animation-delay: 0.58s; }
 
 @keyframes entra {
   from { opacity: 0; transform: translateY(1.1rem); }
@@ -198,7 +198,7 @@ img { max-width: 100%; display: block; }
 }
 
 .capa-marca {
-  margin: 0 0 clamp(1.5rem, 5vh, 2.75rem);
+  margin: 0 0 clamp(0.9rem, 2.5vh, 1.25rem);
   font-family: var(--mono);
   font-weight: 500;
   font-size: 0.7rem;
@@ -224,8 +224,8 @@ img { max-width: 100%; display: block; }
   /* Syne Extrabold é largo: a uma palavra de 9 letras, 12vw já estourava a
      tela de 390px. A tagline vem da config e pode crescer, então além do
      tamanho contido há quebra de palavra como rede de segurança. */
-  font-size: clamp(2.1rem, 10vw, 7.5rem);
-  line-height: 0.94;
+  font-size: clamp(1.9rem, 7vw, 3.5rem);
+  line-height: 1;
   letter-spacing: -0.035em;
   text-wrap: balance;
   overflow-wrap: break-word;
@@ -240,10 +240,10 @@ img { max-width: 100%; display: block; }
 }
 
 .capa-subtitulo {
-  margin: clamp(1.25rem, 4vh, 2rem) 0 0;
+  margin: clamp(0.7rem, 2vh, 1rem) 0 0;
   max-width: 30rem;
   color: var(--texto-breu);
-  font-size: clamp(0.95rem, 2.6vw, 1.1rem);
+  font-size: clamp(0.9rem, 2.4vw, 1rem);
   line-height: 1.6;
 }
 
@@ -253,8 +253,8 @@ img { max-width: 100%; display: block; }
   display: flex;
   flex-wrap: wrap;
   gap: 0 clamp(1.75rem, 6vw, 4rem);
-  margin: clamp(2.25rem, 7vh, 3.5rem) 0 0;
-  padding-top: 1.25rem;
+  margin: clamp(1.25rem, 3.5vh, 1.75rem) 0 0;
+  padding-top: 1rem;
   border-top: 1px solid var(--linha-breu);
   max-width: 34rem;
 }
@@ -272,7 +272,7 @@ img { max-width: 100%; display: block; }
   margin: 0.4rem 0 0;
   font-family: var(--titulo);
   font-weight: 700;
-  font-size: clamp(1.15rem, 3.6vw, 1.5rem);
+  font-size: clamp(1rem, 2.8vw, 1.2rem);
   letter-spacing: -0.01em;
   color: var(--offwhite);
 }
@@ -282,28 +282,6 @@ img { max-width: 100%; display: block; }
   text-transform: uppercase;
   color: var(--texto-breu);
   margin-left: 0.3rem;
-}
-
-.capa-desce {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  margin-top: clamp(2.25rem, 7vh, 3.25rem);
-  color: var(--offwhite);
-  font: 400 0.72rem var(--mono);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-decoration: none;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid var(--linha-breu);
-  transition: color 0.25s, border-color 0.25s;
-}
-.capa-desce svg { width: 1rem; height: 1rem; animation: pisca-desce 2.6s ease-in-out infinite; }
-.capa-desce:hover { color: var(--terracota-claro); border-bottom-color: var(--terracota); }
-
-@keyframes pisca-desce {
-  0%, 100% { transform: translateY(0); opacity: 0.75; }
-  50%      { transform: translateY(0.3rem); opacity: 1; }
 }
 
 /* ============================================================
@@ -1528,6 +1506,30 @@ body.travado .flutuantes { opacity: 0; pointer-events: none; }
 @media (min-width: 760px) {
   .grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .barra-marca { display: block; }
+
+  /* Título e subtítulo de um lado, leitura do outro, alinhada pela base: a
+     capa fica mais baixa ainda sem espremer nada. A colocação é explícita —
+     deixada no automático, o subtítulo subia para a coluna da leitura. */
+  .capa-interna {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: clamp(2rem, 6vw, 4rem);
+    row-gap: 0.4rem;
+  }
+  .capa-marca     { grid-area: 1 / 1 / 2 / -1; }
+  .capa-titulo    { grid-area: 2 / 1 / 3 / 2; }
+  .capa-subtitulo { grid-area: 3 / 1 / 4 / 2; }
+  .leitura {
+    grid-area: 2 / 2 / 4 / 3;
+    align-self: end;
+    margin: 0;
+    padding-top: 0;
+    border-top: 0;
+    justify-content: flex-end;
+    text-align: right;
+    max-width: none;
+  }
+  .leitura-item { min-width: 0; }
 
   .cores-cabeca {
     flex-direction: row;
