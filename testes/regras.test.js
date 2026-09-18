@@ -294,6 +294,62 @@ test('REQ-24: busca sem resultado devolve lista vazia, não erro', () => {
 });
 
 /* ============================================================
+   REQ-36 — seções por categoria e página da categoria
+   ============================================================ */
+
+test('REQ-36: agrupa na ordem em que as categorias aparecem', () => {
+  const secoes = R.agrupaPorCategoria(amostra);
+  assert.deepEqual(secoes.map((s) => s.categoria),
+    ['Vasos e cachepôs', 'Mesa e escritório']);
+  assert.deepEqual(secoes[0].pecas.map((p) => p.id), ['cachepo-curva', 'mini-vaso']);
+});
+
+test('REQ-36: o slug da categoria sai do nome, sem cadastro', () => {
+  const secoes = R.agrupaPorCategoria(amostra);
+  assert.equal(secoes[0].slug, 'vasos-e-cachepos');
+  assert.equal(secoes[1].slug, 'mesa-e-escritorio');
+});
+
+test('REQ-36: o limite corta a seção e avisa que há mais', () => {
+  const secoes = R.agrupaPorCategoria(amostra, 1);
+  assert.deepEqual(secoes[0].pecas.map((p) => p.id), ['cachepo-curva']);
+  assert.equal(secoes[0].total, 2);
+  assert.equal(secoes[0].temMais, true);
+  // A categoria que cabe inteira não ganha "Ver tudo".
+  assert.equal(secoes[1].temMais, false);
+  assert.equal(secoes[1].total, 1);
+});
+
+test('REQ-36: sem limite, a seção vem inteira', () => {
+  const secoes = R.agrupaPorCategoria(amostra);
+  assert.equal(secoes[0].pecas.length, 2);
+  assert.equal(secoes[0].temMais, false);
+});
+
+test('REQ-36: catálogo vazio não gera seção nenhuma', () => {
+  assert.deepEqual(R.agrupaPorCategoria([], 6), []);
+  assert.deepEqual(R.agrupaPorCategoria(null, 6), []);
+});
+
+test('REQ-36: o slug da URL volta a ser o nome escrito na planilha', () => {
+  assert.equal(R.categoriaPorSlug(amostra, 'vasos-e-cachepos'), 'Vasos e cachepôs');
+  assert.equal(R.categoriaPorSlug(amostra, 'mesa-e-escritorio'), 'Mesa e escritório');
+});
+
+test('REQ-36: slug desconhecido devolve nulo — a rota não inventa categoria', () => {
+  assert.equal(R.categoriaPorSlug(amostra, 'guarda-chuvas'), null);
+  assert.equal(R.categoriaPorSlug(amostra, ''), null);
+  assert.equal(R.categoriaPorSlug(amostra, undefined), null);
+});
+
+test('REQ-36: o slug é o mesmo para cor e para categoria', () => {
+  assert.equal(R.slug('Cozinha e ritual'), 'cozinha-e-ritual');
+  assert.equal(R.slug('  Joias   e Acessórios  '), 'joias-e-acessorios');
+  assert.equal(R.slug('Banheiro & beleza'), 'banheiro-beleza');
+  assert.equal(R.slug(R.slug('Mesa e escritório')), 'mesa-e-escritorio');
+});
+
+/* ============================================================
    REQ-30 a REQ-33 — pedido pelo WhatsApp
    ============================================================ */
 

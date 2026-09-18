@@ -89,7 +89,7 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-21 | `disponivel > 0` mostra "Pronta entrega". A quantidade exata aparece **só** se `MOSTRAR_QUANTIDADE` for `true` (padrão: `false`) | ✅ |
 | REQ-22 | Caso contrário mostra "Sob encomenda" e, havendo prazo, "fica pronta em até N dias" | ✅ |
 | REQ-22b | O prazo de produção é **configuração do site** (`PRAZO_PRODUCAO_DIAS`), não dado por peça: quase tudo é sob encomenda com o mesmo prazo, e repetir o número em cada linha da planilha só cria chance de divergência. A coluna `prazo_dias` continua existindo e **vence o padrão**, para a peça excepcional | ✅ |
-| REQ-23 | Filtro por categoria, montado a partir dos próprios dados — categoria nova na planilha cria botão sozinha | 🟡 |
+| REQ-23 | A categoria organiza a página, montada a partir dos próprios dados — categoria nova na planilha aparece sozinha. Desde 18/09/2026 as cápsulas do topo são **links para a página da categoria**, não botões de filtro: clicar no nome de uma categoria leva ao mesmo lugar vindo da cápsula, da rubrica da seção ou do "Ver tudo", e o endereço abre em outra aba e volta pelo botão do navegador | 🟡 |
 | REQ-24 | Busca por nome e descrição, ignorando acento e caixa ("cachepo" acha "Cachepô") | ✅ |
 | REQ-25 | Detalhe da peça com todas as fotos, descrição, cores, ficha técnica e botão de pedido | 🟡 |
 | REQ-26 | `fotos` aceita caminho relativo, URL completa e link do Google Drive — este convertido para `thumbnail?id=<ID>&sz=w1000` | ✅ |
@@ -103,6 +103,8 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-20 | O rótulo da faixa é montado dos dados ("11 cores · fosco, acetinado, mesclado e translúcido"), nunca escrito à mão — cadastrar cor atualiza a contagem e pode acrescentar um acabamento | ✅ |
 | REQ-19 | As cores vivem num **carrossel horizontal** que desliza com o dedo. Como o formato esconde o que está fora da tela, três coisas compensam: a próxima cor sempre aparece cortada na borda, há barra de posição, e no desktop aparecem setas. Cabendo tudo na tela, setas e barra não aparecem | ✅ |
 | REQ-18 | A seção tem link direto `#cores`, para mandar no WhatsApp quando o cliente pergunta que cores existem. Funciona mesmo se o catálogo de peças falhar: a vitrine não depende do CSV | ✅ |
+| REQ-36 | A home mostra **uma prateleira por categoria** (até `PECAS_POR_CATEGORIA`, hoje 6), cada uma com rubrica numerada e endereço próprio `#/c/<slug>`. Passando do limite aparece o "Ver as N", que leva à **página da categoria** — a grade inteira, na mesma página, por rota de hash. O slug é derivado do nome, sem cadastro; slug que não casa com categoria nenhuma cai na home em vez de mostrar página vazia | ✅ |
+| REQ-37 | A prateleira usa a **mesma mecânica do carrossel de cores** (REQ-19), no mesmo trecho de código: corte na borda, barra de posição e setas no desktop. Cabendo tudo na tela — o caso de toda categoria hoje, com 1 a 4 peças — setas e barra não aparecem e ela vira uma fileira comum. O recurso nasce dormindo e liga sozinho quando o catálogo crescer, sem commit | ✅ |
 
 ---
 
@@ -328,6 +330,19 @@ testar derrubando a rede de propósito.
    template: `prefers-reduced-motion` desliga o movimento inteiro (REQ-54), e a
    revelação tem rede de segurança por tempo — catálogo em branco por causa de
    um efeito é falha de venda, não de estilo.
+
+11. **Categoria organiza, não filtra** (REQ-23, REQ-36). A dúvida em 18/09/2026 era
+   trocar a grade única por uma grade de categorias como porta de entrada. Os
+   números diziam não: 15 peças em 6 categorias, mediana de 2,5 — "Brindes"
+   viraria uma página de uma peça, e nenhuma foto apareceria antes do primeiro
+   clique, que é onde a venda acontece. Ficou o meio-termo: a home mostra todas
+   as categorias com até 6 peças cada, e a página da categoria existe como
+   destino de quem quer mais, não como pedágio. O dono avisou que sobe 40–50
+   peças em seguida — nessa densidade, 6 a 8 por categoria, a prateleira passa a
+   ser o formato certo, e o "Ver tudo" liga sozinho.
+12. **Página de categoria é rota de hash, não arquivo HTML.** Arquivo separado
+   duplicaria cabeçalho, Open Graph, o fetch do CSV e o catálogo de cores — e
+   cada peça publicada custaria manutenção em dois lugares (REQ-70, REQ-56).
 
 ---
 

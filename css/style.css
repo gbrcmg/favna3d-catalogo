@@ -374,6 +374,9 @@ img { max-width: 100%; display: block; }
 
 .filtro {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
   border: 1px solid var(--linha);
   background: transparent;
   color: var(--titanio);
@@ -387,7 +390,7 @@ img { max-width: 100%; display: block; }
   transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
 .filtro:hover { color: var(--carvao); border-color: var(--bege); }
-.filtro[aria-pressed="true"] {
+.filtro[aria-current="page"] {
   color: var(--offwhite);
   background: var(--carvao);
   border-color: var(--carvao);
@@ -535,28 +538,26 @@ img { max-width: 100%; display: block; }
 
 .carrossel { position: relative; }
 
-.paleta {
+/* O trilho é a fileira que desliza — vale para a faixa de cores e para as
+   prateleiras de peças. O respiro à esquerda realinha o primeiro item com o
+   texto da página; à direita sobra o corte que mostra que a fileira continua. */
+.trilho {
   list-style: none;
   margin: 0;
-  /* O respiro lateral recoloca a primeira cor alinhada com o texto; à
-     direita sobra o corte que mostra a continuação. */
   padding: 0 clamp(3rem, 10vw, 6rem) 0 max(var(--respiro), calc(50vw - var(--largura) / 2));
   scroll-padding-inline: max(var(--respiro), calc(50vw - var(--largura) / 2)) 3rem;
   display: flex;
-  gap: clamp(1.5rem, 4vw, 2.75rem);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.paleta::-webkit-scrollbar { display: none; }
+.trilho::-webkit-scrollbar { display: none; }
+.trilho > * { flex: 0 0 auto; scroll-snap-align: start; }
 
-.paleta > .amostra {
-  flex: 0 0 auto;
-  width: clamp(5rem, 20vw, 6.5rem);
-  scroll-snap-align: start;
-}
+.paleta { gap: clamp(1.5rem, 4vw, 2.75rem); }
+.paleta > .amostra { width: clamp(5rem, 20vw, 6.5rem); }
 
 .amostra {
   text-align: center;
@@ -602,19 +603,31 @@ img { max-width: 100%; display: block; }
 .seta {
   display: none;
   position: absolute;
-  top: clamp(1.4rem, 5vw, 2rem);
+  /* Cada contexto diz a que altura a seta fica: na faixa de cores, na linha
+     dos discos; na prateleira, na altura da foto. */
+  top: var(--seta-topo, 30%);
   z-index: 2;
   width: 2.4rem; height: 2.4rem;
-  border: 1px solid var(--linha-breu);
+  border: 1px solid var(--linha);
   border-radius: 50%;
-  background: rgb(34 31 30 / 0.85);
+  background: rgb(250 248 245 / 0.92);
   backdrop-filter: blur(6px);
-  color: var(--offwhite);
+  color: var(--carvao);
   cursor: pointer;
   transition: border-color 0.2s, color 0.2s, background 0.2s;
 }
 .seta svg { width: 1rem; height: 1rem; }
-.seta:hover { color: var(--terracota-claro); border-color: var(--terracota); }
+.seta:hover { color: var(--terracota); border-color: var(--terracota); }
+
+/* Dentro da bandeja escura, a seta e a barra se invertem. */
+.faixa-cores { --seta-topo: clamp(1.4rem, 5vw, 2rem); }
+.faixa-cores .seta {
+  border-color: var(--linha-breu);
+  background: rgb(34 31 30 / 0.85);
+  color: var(--offwhite);
+}
+.faixa-cores .seta:hover { color: var(--terracota-claro); border-color: var(--terracota); }
+.faixa-cores .barra-posicao { background: var(--linha-breu); }
 .seta-antes  { left: clamp(0.5rem, 2vw, 1.25rem); }
 .seta-depois { right: clamp(0.5rem, 2vw, 1.25rem); }
 
@@ -625,9 +638,9 @@ img { max-width: 100%; display: block; }
 /* Barra de posição: diz onde você está na fileira sem precisar de 11
    bolinhas. Funciona para qualquer quantidade de cores. */
 .barra-posicao {
-  margin-top: clamp(1.25rem, 3vw, 1.75rem);
+  margin: clamp(1.25rem, 3vw, 1.75rem) max(var(--respiro), calc(50vw - var(--largura) / 2)) 0;
   height: 1px;
-  background: var(--linha-breu);
+  background: var(--linha);
   overflow: hidden;
 }
 .barra-posicao[hidden] { display: none; }
@@ -670,6 +683,95 @@ img { max-width: 100%; display: block; }
   color: var(--titanio);
   white-space: nowrap;
 }
+
+/* ---------- prateleiras por categoria (REQ-36) ----------
+   A casa mostra uma fileira por categoria, com rubrica numerada. A fileira
+   desliza com o dedo e usa a mesma mecânica da faixa de cores: cabendo tudo
+   na tela, setas e barra de posição não aparecem e ela vira uma fileira
+   comum — que é o que acontece hoje, com 1 a 4 peças por categoria. */
+
+.prateleira {
+  --seta-topo: 28%;
+  margin-bottom: clamp(2.25rem, 6vw, 3.5rem);
+}
+
+.prateleira-cabeca {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: clamp(0.9rem, 2.5vw, 1.35rem);
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--linha);
+}
+
+.prateleira-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--titulo);
+  font-weight: 600;
+  font-size: clamp(1.05rem, 3.4vw, 1.4rem);
+  letter-spacing: -0.015em;
+}
+.prateleira-titulo a { color: inherit; text-decoration: none; }
+.prateleira-titulo a:hover { color: var(--terracota); }
+
+.prateleira-indice {
+  flex: 0 0 auto;
+  font: 500 0.66rem var(--mono);
+  letter-spacing: 0.14em;
+  color: var(--terracota);
+}
+
+.prateleira-tudo {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--linha);
+  font: 400 0.66rem var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--titanio);
+  text-decoration: none;
+  transition: color 0.2s, border-color 0.2s;
+}
+.prateleira-tudo:hover { color: var(--terracota); border-bottom-color: var(--terracota); }
+.prateleira-tudo .seta-pedido { transition: transform 0.3s var(--curva); }
+.prateleira-tudo:hover .seta-pedido { transform: translateX(0.3rem); }
+
+.vitrine { gap: var(--gap); }
+
+.vitrine-item { width: clamp(12rem, 60vw, 16.5rem); }
+.vitrine-item .peca { width: 100%; }
+
+/* Na fileira, a peça só desbota para aparecer — deslizar para cima dentro de
+   um contêiner que rola na horizontal renderia uma barra vertical de 20px. */
+.vitrine-item .peca { transform: none; }
+
+/* ---------- cabeçalho do miolo ---------- */
+
+.grade-cabeca-texto { min-width: 0; }
+
+.volta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font: 400 0.66rem var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--titanio);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.volta::before { content: '←'; }
+.volta:hover { color: var(--terracota); }
+.volta[hidden] { display: none; }
 
 .grade {
   display: grid;
@@ -785,8 +887,9 @@ img { max-width: 100%; display: block; }
 
 .peca-info {
   display: grid;
-  /* Em duas colunas de celular o cartão tem ~165px: nome e preço lado a lado
-     vazavam para o vizinho. Empilhado aqui, lado a lado só a partir de 760px. */
+  /* Empilhado sempre: "Preço sob consulta" ao lado do nome quebrava o nome em
+     duas linhas em qualquer coluna estreita — e coluna estreita é a regra,
+     tanto no celular quanto dentro da prateleira. */
   grid-template-columns: minmax(0, 1fr);
   align-items: baseline;
   gap: 0.15rem 0.75rem;
@@ -1425,10 +1528,6 @@ body.travado .flutuantes { opacity: 0; pointer-events: none; }
 @media (min-width: 760px) {
   .grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .barra-marca { display: block; }
-
-  .peca-info { grid-template-columns: minmax(0, 1fr) auto; }
-  .peca-info .preco { margin-top: 0; justify-self: end; white-space: nowrap; }
-  .peca.destaque .peca-info { grid-template-columns: minmax(0, 1fr); }
 
   .cores-cabeca {
     flex-direction: row;

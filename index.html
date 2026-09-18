@@ -31,7 +31,7 @@
 </head>
 <body>
 
-<a class="pular" href="#grade">Pular para as peças</a>
+<a class="pular" href="#miolo">Pular para as peças</a>
 
 <!-- Grão de superfície: a página inteira tem a textura fosca e granulada do
      PEI texturizado (Manual v2, §acabamento de base). Fica por cima de tudo,
@@ -72,7 +72,7 @@
       </div>
     </dl>
 
-    <a class="capa-desce" href="#grade">
+    <a class="capa-desce" href="#miolo">
       <span>Ver as peças</span>
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M12 4v15m0 0l-6-6m6 6l6-6" fill="none" stroke="currentColor"
@@ -131,34 +131,40 @@
       </div>
     </div>
 
+    <!-- Mesma mecânica das prateleiras de peças: .carrossel > .trilho, com as
+         setas e a barra de posição dentro, achadas por classe. Um só trecho
+         de JS liga os dois (REQ-19, REQ-36). -->
     <div class="carrossel">
-      <button type="button" class="seta seta-antes" id="cor-antes"
+      <button type="button" class="seta seta-antes"
               aria-label="Ver cores anteriores" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5"/>
         </svg>
       </button>
-      <ul class="paleta" id="paleta" tabindex="0" role="group"
+      <ul class="trilho paleta" id="paleta" tabindex="0" role="group"
           aria-label="Cores disponíveis — role para o lado para ver todas"></ul>
-      <button type="button" class="seta seta-depois" id="cor-depois"
+      <button type="button" class="seta seta-depois"
               aria-label="Ver mais cores" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M9.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5"/>
         </svg>
       </button>
-    </div>
-
-    <div class="conteudo">
-      <div class="barra-posicao" id="barra-posicao" aria-hidden="true" hidden>
-        <span class="barra-posicao-tento" id="barra-posicao-tento"></span>
+      <div class="barra-posicao" aria-hidden="true" hidden>
+        <span class="barra-posicao-tento"></span>
       </div>
     </div>
   </section>
 
-  <!-- ============ GRADE ============ -->
+  <!-- ============ MIOLO ============
+       Recebe uma de três vistas, montadas pelo app.js: a casa (uma
+       prateleira por categoria), a página de uma categoria (grade inteira)
+       ou o resultado da busca (grade achatada). -->
   <div class="conteudo">
     <div class="grade-cabeca">
-      <h2 class="secao-titulo" id="grade-titulo">O catálogo</h2>
+      <div class="grade-cabeca-texto">
+        <a class="volta" id="grade-volta" href="#/" hidden>Todo o catálogo</a>
+        <h2 class="secao-titulo" id="grade-titulo">O catálogo</h2>
+      </div>
       <p class="secao-conta" id="grade-conta" aria-live="polite"></p>
     </div>
 
@@ -167,9 +173,9 @@
       Montando o catálogo…
     </p>
     <p id="vazio" class="estado" hidden></p>
-
-    <section class="grade" id="grade" aria-labelledby="grade-titulo"></section>
   </div>
+
+  <div id="miolo"></div>
 
 </main>
 

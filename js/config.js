@@ -59,6 +59,12 @@ const CONFIG = {
   // Deixe 0 ou null para não mostrar prazo nenhum.
   PRAZO_PRODUCAO_DIAS: 3,
 
+  // Quantas peças cada categoria mostra na página inicial. Passando disso,
+  // a seção ganha um "Ver as N" que leva à página da categoria — com menos,
+  // o botão não aparece, porque seria um clique que não muda nada.
+  // Seis preenche linha cheia em 2, 3 e 4 colunas.
+  PECAS_POR_CATEGORIA: 6,
+
   // Guarda o último catálogo que carregou bem, para o site não ficar
   // vazio se o Google estiver fora do ar. Deixe true.
   USAR_CACHE_OFFLINE: true,

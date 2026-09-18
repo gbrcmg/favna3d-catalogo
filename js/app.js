@@ -17,7 +17,10 @@ const CHAVE_CACHE_DATA = 'favna-catalogo-csv-data-v1';
 
 const estado = {
   produtos: [],
-  categoria: 'todas',
+  // 'casa' = uma prateleira por categoria; 'categoria' = a grade inteira de
+  // uma delas; 'busca' = resultado achatado, atravessando categorias.
+  vista: 'casa',
+  categoria: null,   // nome como está escrito na planilha, não o slug
   busca: '',
   aberto: null,      // produto aberto no detalhe
   corEscolhida: null,
@@ -225,24 +228,29 @@ async function carrega() {
   throw new Error('sem-dados');
 }
 
-/* ---------- render: filtros ---------- */
+/* ---------- render: filtros ----------
+   As cápsulas são LINKS para a página da categoria, não botões de filtro.
+   O ganho não é de estilo: clicar no nome de uma categoria leva ao mesmo
+   lugar em qualquer canto da página (cápsula, rubrica da prateleira ou
+   "Ver tudo"), e o endereço dá para mandar no WhatsApp, abrir em outra aba
+   e voltar pelo botão do navegador. */
 
 function desenhaFiltros() {
   const alvo = $('#filtros');
   alvo.innerHTML = '';
-  const categorias = Regras.categoriasDe(estado.produtos);
-  [['todas', 'Tudo'], ...categorias.map((c) => [c, c])].forEach(([valor, rotulo]) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'filtro';
-    b.textContent = rotulo;
-    b.setAttribute('aria-pressed', String(estado.categoria === valor));
-    b.addEventListener('click', () => {
-      estado.categoria = valor;
-      desenhaFiltros();
-      desenhaGrade();
-    });
-    alvo.appendChild(b);
+  const atual = estado.vista === 'categoria' ? estado.categoria : null;
+
+  const itens = [[null, 'Tudo', '#/']].concat(
+    Regras.categoriasDe(estado.produtos).map(
+      (c) => [c, c, '#/c/' + Regras.slug(c)]));
+
+  itens.forEach(([valor, rotulo, destino]) => {
+    const a = document.createElement('a');
+    a.className = 'filtro';
+    a.href = destino;
+    a.textContent = rotulo;
+    if (valor === atual) a.setAttribute('aria-current', 'page');
+    alvo.appendChild(a);
   });
 }
 
@@ -267,9 +275,15 @@ function revelaVisiveis() {
   });
 }
 
-function cartao(produto, indice) {
+/**
+ * `opcoes.uniforme` desliga o tratamento de destaque: dentro da prateleira
+ * todo cartão tem a mesma largura, e o cartão partido em dois (foto + painel
+ * de texto) só faz sentido na grade, onde ele pode ocupar duas colunas.
+ */
+function cartao(produto, indice, opcoes) {
+  const uniforme = !!(opcoes && opcoes.uniforme);
   const art = document.createElement('article');
-  art.className = 'peca' + (produto.destaque ? ' destaque' : '');
+  art.className = 'peca' + (produto.destaque && !uniforme ? ' destaque' : '');
   // A cascata escalona só dentro da fileira: a última peça de uma lista
   // longa não pode ficar meio segundo atrasada.
   art.style.setProperty('--atraso', `${(indice % 4) * 0.07}s`);
@@ -342,7 +356,7 @@ function cartao(produto, indice) {
   // A peça em destaque ocupa duas colunas e sobra espaço de texto: a
   // primeira frase da descrição entra ali. O CSS esconde o resumo onde o
   // cartão não é partido em dois.
-  if (produto.destaque && produto.descricao) {
+  if (produto.destaque && !uniforme && produto.descricao) {
     const resumo = document.createElement('p');
     resumo.className = 'peca-resumo';
     const frase = produto.descricao.split(/(?<=[.!?])\s/)[0];
@@ -359,39 +373,181 @@ function cartao(produto, indice) {
   return art;
 }
 
-function desenhaGrade() {
-  const alvo = $('#grade');
-  const lista = Regras.filtraProdutos(estado.produtos, {
-    categoria: estado.categoria,
-    busca: estado.busca,
-  });
-  alvo.innerHTML = '';
-  porRevelar = [];
-  paralaxe.limpaOrfaos();
+/* ---------- render: o miolo ----------
+   Três vistas na mesma página, montadas no mesmo lugar: a casa (uma
+   prateleira por categoria), a página de uma categoria (grade inteira) e o
+   resultado da busca. Nenhuma delas é arquivo HTML novo — seria duplicar
+   cabeçalho, Open Graph e o fetch do CSV (REQ-70, REQ-56). */
 
-  const conta = $('#grade-conta');
-  if (conta) {
-    conta.textContent = !estado.produtos.length ? ''
-      : lista.length === estado.produtos.length
-        ? `${doisDigitos(lista.length)} peças`
-        : `${doisDigitos(lista.length)} de ${doisDigitos(estado.produtos.length)}`;
+/** Cabeçalho do miolo: título, contagem e o caminho de volta. */
+function atualizaCabeca(titulo, conta, mostraVolta) {
+  $('#grade-titulo').textContent = titulo;
+  $('#grade-conta').textContent = conta;
+  $('#grade-volta').hidden = !mostraVolta;
+}
+
+function desenhaMiolo() {
+  const miolo = $('#miolo');
+  miolo.innerHTML = '';
+  porRevelar = [];
+  trilhos = trilhos.filter((c) => c.isConnected);
+  paralaxe.limpaOrfaos();
+  $('#vazio').hidden = true;
+
+  if (!estado.produtos.length) { atualizaCabeca('O catálogo', '', false); return; }
+
+  if (estado.busca) desenhaBusca(miolo);
+  else if (estado.vista === 'categoria') desenhaCategoria(miolo);
+  else desenhaCasa(miolo);
+
+  aoRolar();
+  // Rede de segurança: se o quadro de animação demorar, as peças que já
+  // estão na tela aparecem assim mesmo. Nunca um catálogo em branco por
+  // causa de um efeito.
+  setTimeout(revelaVisiveis, 400);
+}
+
+/* ---------- vista: casa ---------- */
+
+function desenhaCasa(miolo) {
+  const secoes = Regras.agrupaPorCategoria(estado.produtos, CONFIG.PECAS_POR_CATEGORIA);
+  atualizaCabeca('O catálogo',
+    `${doisDigitos(estado.produtos.length)} peças · ${secoes.length} categorias`, false);
+  secoes.forEach((secao, i) => miolo.appendChild(prateleira(secao, i)));
+}
+
+/**
+ * Uma prateleira por categoria. Ela desliza com o dedo e usa exatamente a
+ * mesma mecânica da faixa de cores (REQ-19): a próxima peça aparece cortada
+ * na borda, há barra de posição, e no desktop aparecem setas. Cabendo tudo
+ * na tela — que é o caso de quase toda categoria hoje —, setas e barra não
+ * aparecem e a prateleira vira uma fileira comum.
+ */
+function prateleira(secao, indice) {
+  const el = document.createElement('section');
+  el.className = 'prateleira';
+  el.id = 'c-' + secao.slug;
+
+  const cabeca = document.createElement('div');
+  cabeca.className = 'conteudo prateleira-cabeca';
+
+  const h3 = document.createElement('h3');
+  h3.className = 'prateleira-titulo';
+  h3.id = 'titulo-' + secao.slug;
+  const num = document.createElement('span');
+  num.className = 'prateleira-indice';
+  num.setAttribute('aria-hidden', 'true');
+  num.textContent = doisDigitos(indice + 1);
+  const elo = document.createElement('a');
+  elo.href = '#/c/' + secao.slug;
+  elo.textContent = secao.categoria;
+  h3.append(num, elo);
+  cabeca.appendChild(h3);
+
+  // O "Ver tudo" só existe quando há mais peça do que cabe na prateleira.
+  // Com 4 peças numa categoria ele seria um clique que não muda nada.
+  if (secao.temMais) {
+    const tudo = document.createElement('a');
+    tudo.className = 'prateleira-tudo';
+    tudo.href = '#/c/' + secao.slug;
+    const texto = document.createElement('span');
+    texto.textContent = `Ver as ${secao.total}`;
+    const seta = document.createElement('span');
+    seta.className = 'seta-pedido';
+    seta.setAttribute('aria-hidden', 'true');
+    seta.textContent = '→';
+    tudo.append(texto, seta);
+    cabeca.appendChild(tudo);
   }
+  el.appendChild(cabeca);
+
+  const carrossel = document.createElement('div');
+  carrossel.className = 'carrossel';
+  carrossel.append(
+    setaDoTrilho('antes', `Ver peças anteriores de ${secao.categoria}`),
+    trilhoDePecas(secao),
+    setaDoTrilho('depois', `Ver mais peças de ${secao.categoria}`),
+    barraDePosicao());
+  el.appendChild(carrossel);
+
+  ligaTrilho(carrossel);
+  return el;
+}
+
+function trilhoDePecas(secao) {
+  const trilho = document.createElement('ul');
+  trilho.className = 'trilho vitrine';
+  trilho.tabIndex = 0;
+  trilho.setAttribute('role', 'group');
+  trilho.setAttribute('aria-label',
+    `${secao.categoria} — role para o lado para ver as peças`);
+  secao.pecas.forEach((peca, i) => {
+    const item = document.createElement('li');
+    item.className = 'vitrine-item';
+    item.appendChild(cartao(peca, i, { uniforme: true }));
+    trilho.appendChild(item);
+  });
+  return trilho;
+}
+
+function setaDoTrilho(lado, rotulo) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'seta seta-' + lado;
+  b.setAttribute('aria-label', rotulo);
+  b.hidden = true;
+  b.innerHTML = lado === 'antes'
+    ? '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>'
+    : '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+  return b;
+}
+
+function barraDePosicao() {
+  const barra = document.createElement('div');
+  barra.className = 'barra-posicao';
+  barra.setAttribute('aria-hidden', 'true');
+  barra.hidden = true;
+  const tento = document.createElement('span');
+  tento.className = 'barra-posicao-tento';
+  barra.appendChild(tento);
+  return barra;
+}
+
+/* ---------- vista: categoria e busca ---------- */
+
+function desenhaCategoria(miolo) {
+  const lista = Regras.filtraProdutos(estado.produtos, { categoria: estado.categoria });
+  atualizaCabeca(estado.categoria, `${doisDigitos(lista.length)} peças`, true);
+  miolo.appendChild(gradeDe(lista));
+}
+
+function desenhaBusca(miolo) {
+  const lista = Regras.filtraProdutos(estado.produtos, { busca: estado.busca });
+  atualizaCabeca('Busca',
+    `${doisDigitos(lista.length)} de ${doisDigitos(estado.produtos.length)}`,
+    estado.vista === 'categoria');
 
   if (!lista.length) {
     const vazio = $('#vazio');
     vazio.hidden = false;
-    vazio.textContent = estado.busca
-      ? `Nada encontrado para “${estado.busca}”. Tente outra palavra ou volte para Tudo.`
-      : 'Nenhuma peça nesta categoria por enquanto.';
+    vazio.textContent =
+      `Nada encontrado para “${estado.busca}”. Tente outra palavra — a busca ` +
+      'procura em nome, descrição e categoria.';
     return;
   }
-  $('#vazio').hidden = true;
-  lista.forEach((p, i) => alvo.appendChild(cartao(p, i)));
-  aoRolar();
-  // Rede de segurança: se por qualquer motivo o quadro de animação demorar,
-  // as peças que já estão na tela aparecem assim mesmo. Nunca um catálogo
-  // em branco por causa de um efeito.
-  setTimeout(revelaVisiveis, 400);
+  miolo.appendChild(gradeDe(lista));
+}
+
+/** A grade que quebra linha: absorve 1 ou 40 peças sem parecer errada. */
+function gradeDe(lista) {
+  const caixa = document.createElement('div');
+  caixa.className = 'conteudo';
+  const grade = document.createElement('section');
+  grade.className = 'grade';
+  grade.setAttribute('aria-labelledby', 'grade-titulo');
+  lista.forEach((p, i) => grade.appendChild(cartao(p, i)));
+  caixa.appendChild(grade);
+  return caixa;
 }
 
 /* ---------- render: vitrine de cores (REQ-17) ---------- */
@@ -441,20 +597,28 @@ function desenhaPaleta() {
   secao.hidden = false;
   // A trama de camadas do fundo desliza mais devagar que a faixa.
   paralaxe.registra(secao, 60);
-  ligaCarrossel();
+  ligaTrilho(secao.querySelector('.carrossel'));
 }
 
-/* ---------- carrossel: setas e barra de posição (REQ-19) ---------- */
+/* ---------- carrossel: setas e barra de posição (REQ-19, REQ-36) ----------
+   Um mecanismo só, achado por classe, serve à faixa de cores e a cada
+   prateleira de peças: .carrossel > .trilho, com .seta-antes, .seta-depois e
+   .barra-posicao dentro. Não sobra nenhum controle que não faça nada — sem
+   o que rolar, setas e barra se escondem sozinhas. */
 
-function atualizaCarrossel() {
-  const trilho = $('#paleta');
+let trilhos = [];
+
+function atualizaTrilho(carrossel) {
+  const trilho = carrossel.querySelector('.trilho');
+  if (!trilho) return;
   const p = Regras.progressoCarrossel(trilho);
 
-  // Nada a rolar (poucas cores, tela larga): esconde os controles em vez
-  // de deixar seta que não faz nada.
-  $('#barra-posicao').hidden = !p.rola;
-  $('#cor-antes').hidden = !p.rola || p.noInicio;
-  $('#cor-depois').hidden = !p.rola || p.noFim;
+  const barra = carrossel.querySelector('.barra-posicao');
+  const antes = carrossel.querySelector('.seta-antes');
+  const depois = carrossel.querySelector('.seta-depois');
+  if (barra) barra.hidden = !p.rola;
+  if (antes) antes.hidden = !p.rola || p.noInicio;
+  if (depois) depois.hidden = !p.rola || p.noFim;
   if (!p.rola) return;
 
   // O tento tem LARGURA_TENTO% da barra e precisa percorrer o resto dela.
@@ -462,31 +626,47 @@ function atualizaCarrossel() {
   // barra — daí a razão: percorrer 72% da barra são 257% do tento.
   const LARGURA_TENTO = 28;
   const curso = (100 - LARGURA_TENTO) / LARGURA_TENTO * 100;
-  $('#barra-posicao-tento').style.transform =
-    `translateX(${(p.fracao * curso).toFixed(2)}%)`;
+  const tento = carrossel.querySelector('.barra-posicao-tento');
+  if (tento) tento.style.transform = `translateX(${(p.fracao * curso).toFixed(2)}%)`;
 }
 
-function ligaCarrossel() {
-  const trilho = $('#paleta');
-  if (!trilho || trilho.dataset.ligado) { atualizaCarrossel(); return; }
-  trilho.dataset.ligado = '1';
+function ligaTrilho(carrossel) {
+  const trilho = carrossel && carrossel.querySelector('.trilho');
+  if (!trilho) return;
+  const atualiza = () => atualizaTrilho(carrossel);
 
-  // Um passo = a largura visível menos uma amostra, para a cor da borda
-  // não ser pulada e servir de ponto de referência.
-  const passo = () => Math.max(120, trilho.clientWidth - 110);
-  const suave = !semMovimento.matches;
+  if (!trilho.dataset.ligado) {
+    trilho.dataset.ligado = '1';
+    trilhos.push(carrossel);
 
-  const anda = (sentido) => trilho.scrollBy({
-    left: sentido * passo(),
-    behavior: suave ? 'smooth' : 'auto',
-  });
+    // Um passo = a largura visível menos um item, para o que estava na borda
+    // não ser pulado e servir de ponto de referência. A medida sai do próprio
+    // item, então serve tanto para a amostra de cor quanto para o cartão.
+    const passo = () => {
+      const item = trilho.firstElementChild;
+      const largura = item ? item.getBoundingClientRect().width + 24 : 140;
+      return Math.max(largura, trilho.clientWidth - largura);
+    };
+    const suave = !semMovimento.matches;
+    const anda = (sentido) => trilho.scrollBy({
+      left: sentido * passo(),
+      behavior: suave ? 'smooth' : 'auto',
+    });
 
-  $('#cor-antes').addEventListener('click', () => anda(-1));
-  $('#cor-depois').addEventListener('click', () => anda(1));
-  trilho.addEventListener('scroll', atualizaCarrossel, { passive: true });
-  window.addEventListener('resize', atualizaCarrossel);
+    const antes = carrossel.querySelector('.seta-antes');
+    const depois = carrossel.querySelector('.seta-depois');
+    if (antes) antes.addEventListener('click', () => anda(-1));
+    if (depois) depois.addEventListener('click', () => anda(1));
+    trilho.addEventListener('scroll', atualiza, { passive: true });
+  }
 
-  atualizaCarrossel();
+  atualiza();
+}
+
+/** Um listener de resize só, para todos os trilhos vivos. */
+function atualizaTrilhos() {
+  trilhos = trilhos.filter((c) => c.isConnected);
+  trilhos.forEach(atualizaTrilho);
 }
 
 /* ---------- render: detalhe ---------- */
@@ -721,6 +901,7 @@ function atualizaBotaoPedido(produto) {
 /* ---------- abrir e fechar o detalhe ---------- */
 
 let focoAnterior = null;
+let rotaAnterior = '';   // para onde o detalhe volta quando fecha
 
 function abre(id) {
   const produto = estado.produtos.find((p) => p.id === id);
@@ -731,7 +912,13 @@ function abre(id) {
   $('#detalhe').hidden = false;
   document.body.classList.add('travado');
   $('#detalhe-fecha').focus();
-  if (location.hash !== `#/p/${id}`) history.pushState(null, '', `#/p/${id}`);
+  if (location.hash !== `#/p/${id}`) {
+    // Guarda a vista de trás: fechando o detalhe aberto de dentro de uma
+    // categoria, o cliente volta para a categoria, não para o começo.
+    rotaAnterior = location.hash.startsWith('#/p/') ? rotaAnterior : location.hash;
+    history.pushState(null, '', `#/p/${id}`);
+    ultimaRota = location.hash;
+  }
 }
 
 function fecha() {
@@ -739,7 +926,10 @@ function fecha() {
   estado.aberto = null;
   $('#detalhe').hidden = true;
   document.body.classList.remove('travado');
-  if (location.hash.startsWith('#/p/')) history.pushState(null, '', location.pathname);
+  if (location.hash.startsWith('#/p/')) {
+    history.pushState(null, '', rotaAnterior || location.pathname);
+    ultimaRota = location.hash;
+  }
   if (focoAnterior) focoAnterior.focus();
 }
 
@@ -766,18 +956,64 @@ function prendeFoco(evento) {
  * carregamento, quando a seção ainda está `hidden`, e desiste. Por isso a
  * rolagem é feita aqui, depois de a vitrine existir.
  */
+/* Clicar numa cápsula dispara `hashchange`; voltar pelo navegador dispara
+   `hashchange` e `popstate` juntos. Guardar a última rota aplicada evita
+   desenhar o miolo duas vezes — e abrir e fechar o detalhe também marcam,
+   porque eles mexem no endereço sem disparar evento nenhum. */
+let ultimaRota = null;
+
 function aplicaHash() {
-  const m = location.hash.match(/^#\/p\/(.+)$/);
-  if (m) { abre(decodeURIComponent(m[1])); return; }
+  const hash = location.hash;
+  if (hash === ultimaRota) return;
+  ultimaRota = hash;
+
+  // REQ-18 — a vitrine de cores é uma âncora, não uma vista: ela não tira
+  // ninguém da categoria em que estava.
+  if (hash === '#cores') {
+    const secao = $('#cores');
+    if (secao && !secao.hidden) secao.scrollIntoView({ block: 'start' });
+    return;
+  }
+
+  // REQ-50 — link direto da peça. O fundo é a vista que já estava montada;
+  // quem chegou direto pelo link do WhatsApp recebe a casa atrás.
+  const peca = hash.match(/^#\/p\/(.+)$/);
+  if (peca) {
+    if (!$('#miolo').children.length) desenhaMiolo();
+    abre(decodeURIComponent(peca[1]));
+    return;
+  }
 
   if (estado.aberto) fecha();
 
-  if (location.hash === '#cores') {
-    const secao = $('#cores');
-    if (secao && !secao.hidden) {
-      secao.scrollIntoView({ block: 'start' });
-    }
-  }
+  // REQ-36 — página da categoria. Slug que não casa com categoria nenhuma
+  // (link velho, categoria renomeada na planilha) cai na casa em vez de
+  // mostrar uma página vazia sem explicação.
+  const categoria = hash.match(/^#\/c\/(.+)$/);
+  const nome = categoria
+    ? Regras.categoriaPorSlug(estado.produtos, decodeURIComponent(categoria[1]))
+    : null;
+
+  estado.vista = nome ? 'categoria' : 'casa';
+  estado.categoria = nome;
+
+  // Trocar de vista zera a busca: ela atravessa categorias, então continuar
+  // filtrando por um texto antigo dentro da nova vista confunde mais do que
+  // ajuda. Aqui só apaga — o desenho vem logo abaixo, uma vez só.
+  estado.busca = '';
+  const campo = $('#busca');
+  if (campo) campo.value = '';
+
+  desenhaFiltros();
+  desenhaMiolo();
+
+  if (nome) rolaAteOMiolo();
+}
+
+/** Leva o começo do miolo ao alto da tela, sem passar por baixo da barra. */
+function rolaAteOMiolo() {
+  const cabeca = $('.grade-cabeca');
+  if (cabeca) cabeca.scrollIntoView({ block: 'start' });
 }
 
 /* ---------- avisos (REQ-41, REQ-42, REQ-44) ---------- */
@@ -814,16 +1050,25 @@ function ligaBusca() {
     bloco.hidden = !abrindo;
     botao.setAttribute('aria-expanded', String(abrindo));
     if (abrindo) campo.focus();
-    else { campo.value = ''; estado.busca = ''; desenhaGrade(); }
+    else limpaBusca();
   });
 
   campo.addEventListener('input', () => {
     estado.busca = campo.value;
-    desenhaGrade();
+    desenhaMiolo();
   });
 
   telaLarga.addEventListener('change', ajusta);
   ajusta();
+}
+
+/** Apaga a busca e devolve a vista que estava por baixo dela. */
+function limpaBusca() {
+  const campo = $('#busca');
+  if (campo) campo.value = '';
+  if (!estado.busca) return;
+  estado.busca = '';
+  desenhaMiolo();
 }
 
 /* ---------- atalhos flutuantes ----------
@@ -875,6 +1120,8 @@ async function inicia() {
     prendeFoco(e);
   });
   window.addEventListener('popstate', aplicaHash);
+  window.addEventListener('hashchange', aplicaHash);
+  window.addEventListener('resize', atualizaTrilhos);
 
   ligaBusca();
   ligaFlutuantes();
@@ -915,8 +1162,7 @@ async function inicia() {
 
   atualizaLeitura();
   desenhaFiltros();
-  desenhaGrade();
-  aplicaHash();
+  aplicaHash();     // monta a vista que o endereço pede — casa, categoria ou peça
 }
 
 document.addEventListener('DOMContentLoaded', inicia);

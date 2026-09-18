@@ -101,6 +101,40 @@ python3 scripts/extrair-cores.py --conferir
 
 Escrever `Verde Oliva`, `verde oliva` ou `VERDE-OLIVA` na planilha dá no mesmo.
 
+### Como a página se organiza por categoria
+
+A página inicial mostra **uma fileira por categoria**, na ordem em que as
+categorias aparecem na planilha (que segue `destaque` e `ordem`). Cada fileira
+desliza com o dedo e mostra até **6 peças**.
+
+Passando de 6, a fileira ganha um **"Ver as N"** que leva à **página daquela
+categoria**, com a grade inteira. Abaixo de 6 o botão não aparece — seria um
+clique que não muda nada.
+
+Cada categoria tem endereço próprio, feito a partir do nome, e é ele que você
+manda no WhatsApp quando alguém pergunta só dos vasos:
+
+```
+https://favna3d.com.br/#/c/vasos-e-cachepos
+```
+
+O apelido sai do nome sozinho: `Vasos e cachepôs` vira `vasos-e-cachepos`
+(sem acento, minúsculo, hífen no lugar de espaço). **Renomear a categoria na
+planilha muda o endereço** — links antigos param de casar e caem na página
+inicial, sem erro, mas caem.
+
+As cápsulas no topo levam para essas mesmas páginas, e a busca continua
+procurando no catálogo inteiro, atravessando categoria.
+
+Para mudar quantas peças cabem em cada fileira, em `js/config.js`:
+
+```js
+PECAS_POR_CATEGORIA: 6,
+```
+
+> Mudar este número é mudança de **código**, não de planilha — precisa de
+> commit. Seis preenche linha cheia em telas de 2, 3 e 4 colunas.
+
 ### Mudar o prazo de produção
 
 O prazo vale para **todas** as peças e fica em um lugar só, em `js/config.js`:
@@ -137,7 +171,7 @@ quase tudo hoje.
 | `ativo` | sim | `SIM` mostra, `NÃO` esconde. |
 | `ordem` | não | Ordem na página, menor primeiro. Em branco vai pro fim. |
 | `nome` | sim | Nome que aparece. **Tem que ser igual ao da aba Estoque**, senão o estoque não casa. |
-| `categoria` | sim | Vira um botão de filtro. Categoria nova cria botão novo sozinha. |
+| `categoria` | sim | Organiza a página: vira uma seção na home, uma cápsula no topo e uma página própria. Categoria nova aparece sozinha. |
 | `descricao` | não | 1 a 3 frases. Pode ter vírgula. |
 | `preco` | não | Número. Vazio = "Preço sob consulta". |
 | `fotos` | não | Caminhos separados por `\|`. A primeira é a capa. |
@@ -202,6 +236,18 @@ WHATSAPP_NUMERO: '5527999998888',   // 55 + DDD + número, só dígitos
 Enquanto `WHATSAPP_NUMERO` estiver com o texto `55DDDNUMERO`, o botão de pedido
 não aparece — no lugar dele o site avisa que falta configurar. É de propósito:
 melhor não ter botão do que ter um botão que abre conversa nenhuma.
+
+Os **botões redondos flutuantes** (WhatsApp e Instagram, no canto de baixo à
+direita) saem do mesmo arquivo:
+
+```js
+MENSAGEM_WHATSAPP_GERAL: 'Olá! Vim pelo catálogo e quero saber mais sobre as peças.',
+INSTAGRAM_USUARIO: 'favna.3d',
+```
+
+Quem clica no flutuante ainda não escolheu peça nenhuma — por isso a mensagem é
+geral, separada da mensagem do pedido. Deixar `INSTAGRAM_USUARIO` em branco
+esconde o botão do Instagram; número de WhatsApp inválido esconde o outro.
 
 ---
 

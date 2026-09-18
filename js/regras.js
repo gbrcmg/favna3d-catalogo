@@ -217,10 +217,52 @@
    * acrescentar cor é só pôr a foto em assets/cores/ e rodar o script — sem
    * tabela de tradução para alguém esquecer de atualizar.
    */
-  function slugDeCor(nome) {
-    return normaliza(nome)
+  /**
+   * Apelido de URL a partir de texto livre: sem acento, minúsculo, hífens no
+   * lugar do resto. Serve para cor e para categoria — as duas precisam casar
+   * um texto escrito na planilha com um endereço estável.
+   */
+  function slug(texto) {
+    return normaliza(texto)
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
+  }
+
+  /** O catálogo de cores casa pelo mesmo slug — o nome antigo continua valendo. */
+  function slugDeCor(nome) {
+    return slug(nome);
+  }
+
+  /**
+   * Devolve o nome da categoria escrito na planilha a partir do slug da URL.
+   * `#/c/vasos-e-cachepos` volta a ser "Vasos e cachepôs" sem tabela de
+   * tradução: o slug é derivado, não cadastrado.
+   */
+  function categoriaPorSlug(produtos, apelido) {
+    const alvo = slug(apelido);
+    if (!alvo) return null;
+    const achada = categoriasDe(produtos).filter(function (c) { return slug(c) === alvo; });
+    return achada.length ? achada[0] : null;
+  }
+
+  /**
+   * Agrupa o catálogo em seções por categoria, na mesma ordem em que as
+   * categorias aparecem nos produtos (que já vêm ordenados por destaque,
+   * ordem e nome). `limite` corta o que vai para a home; `total` e `temMais`
+   * dizem se vale mostrar o "Ver tudo".
+   */
+  function agrupaPorCategoria(produtos, limite) {
+    const teto = (typeof limite === 'number' && limite > 0) ? limite : Infinity;
+    return categoriasDe(produtos).map(function (categoria) {
+      const todas = (produtos || []).filter(function (p) { return p.categoria === categoria; });
+      return {
+        categoria: categoria,
+        slug: slug(categoria),
+        pecas: todas.slice(0, teto),
+        total: todas.length,
+        temMais: todas.length > teto,
+      };
+    });
   }
 
   /**
@@ -392,7 +434,10 @@
     situacao: situacao,
     filtraProdutos: filtraProdutos,
     categoriasDe: categoriasDe,
+    slug: slug,
     slugDeCor: slugDeCor,
+    categoriaPorSlug: categoriaPorSlug,
+    agrupaPorCategoria: agrupaPorCategoria,
     luminanciaDe: luminanciaDe,
     paletaOrdenada: paletaOrdenada,
     resumoDaPaleta: resumoDaPaleta,
