@@ -37,6 +37,14 @@ const CONFIG = {
   // {nome}, {preco} e {link} são trocados automaticamente.
   MENSAGEM_WHATSAPP: 'Olá! Vi no catálogo e quero o *{nome}* ({preco}).',
 
+  // Mensagem do botão redondo que fica flutuando na tela — quem clica nele
+  // ainda não escolheu peça nenhuma, então a mensagem é geral.
+  MENSAGEM_WHATSAPP_GERAL: 'Olá! Vim pelo catálogo e quero saber mais sobre as peças.',
+
+  // Perfil do Instagram: só o usuário, sem @ e sem endereço.
+  // Em branco, o botão flutuante do Instagram simplesmente não aparece.
+  INSTAGRAM_USUARIO: 'favna.3d',
+
 
   /* ---- 4. Ajustes finos ------------------------------------ */
 

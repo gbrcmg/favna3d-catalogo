@@ -115,6 +115,7 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-32 | `personalizavel` verdadeiro acrescenta o pedido de personalização à mensagem | ✅ |
 | REQ-33 | Número não configurado mostra um aviso **no lugar** do botão — nunca um botão que abre conversa inexistente | ✅ |
 | REQ-34 | Havendo cores, o cliente escolhe antes de pedir e a escolha entra na mensagem | 🟡 |
+| REQ-35 | Há **atalhos flutuantes** de WhatsApp e Instagram, fixos embaixo à direita, que entram depois que a capa sai da tela e somem com o detalhe aberto. Os endereços saem do `config.js` (`WHATSAPP_NUMERO` + `MENSAGEM_WHATSAPP_GERAL`, `INSTAGRAM_USUARIO`); o que não estiver configurado não aparece, pela mesma razão do REQ-33. A pele é a da casa — Carvão em repouso, Oliva Queimado e Terracota no hover —, não a cor das redes: o verde da marca do WhatsApp brigaria com a paleta inteira (REQ-73) | ✅ |
 
 ---
 

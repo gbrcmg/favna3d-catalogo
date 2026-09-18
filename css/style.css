@@ -1199,6 +1199,117 @@ img { max-width: 100%; display: block; }
 }
 
 /* ============================================================
+   ATALHOS FLUTUANTES
+   ------------------------------------------------------------
+   Mesmo gesto do botão flutuante do CataPromos — redondo, embaixo à
+   direita, com dica no hover e um pulso chamando o olho. A pele é que muda:
+   o verde #25D366 com halo pulsando brigaria com a página inteira, então o
+   botão nasce em Carvão e só assume a cor no hover — e a cor é a da casa
+   (Oliva Queimado para o WhatsApp, Terracota para o Instagram), não a da
+   rede. O pulso é o mesmo anel de camada que o resto da página usa.
+   ============================================================ */
+
+.flutuantes {
+  position: fixed;
+  right: clamp(0.85rem, 3vw, 1.75rem);
+  bottom: max(clamp(0.85rem, 3vw, 1.75rem), env(safe-area-inset-bottom));
+  z-index: 45;            /* acima da barra (40), abaixo do detalhe (100) */
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  /* Só entram depois que a capa sai da tela: na chegada, dois botões
+     redondos brigariam com a composição do título. */
+  opacity: 0;
+  transform: translateY(0.75rem);
+  pointer-events: none;
+  transition: opacity 0.4s var(--curva), transform 0.4s var(--curva);
+}
+.flutuantes[hidden] { display: none; }
+.flutuantes.mostra { opacity: 1; transform: none; pointer-events: auto; }
+
+/* Com o detalhe aberto eles sumiriam atrás do véu como um borrão. */
+body.travado .flutuantes { opacity: 0; pointer-events: none; }
+
+.flutuante {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--breu);
+  color: var(--offwhite);
+  box-shadow:
+    0 16px 34px -14px rgb(34 31 30 / 0.7),
+    inset 0 0 0 1px rgb(250 248 245 / 0.14);
+  transition: transform 0.3s var(--curva), background 0.3s, box-shadow 0.3s;
+}
+.flutuante[hidden] { display: none; }
+.flutuante svg { position: relative; z-index: 2; width: 1.5rem; height: 1.5rem; }
+
+/* As camadas da extrusão também aqui: o botão é uma peça impressa. */
+.flutuante::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-linear-gradient(
+    to bottom, rgb(250 248 245 / 0.10) 0 1px, transparent 1px 4px);
+  pointer-events: none;
+}
+
+.flutuante:hover { transform: translateY(-2px) scale(1.06); }
+.flutuante-whatsapp:hover  { background: var(--oliva); }
+.flutuante-instagram:hover { background: var(--terracota); }
+
+/* Pulso: um anel de camada abrindo, não o halo verde da rede. */
+.flutuante-pulso {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--terracota);
+  animation: pulso 3.2s var(--curva) infinite;
+}
+
+@keyframes pulso {
+  0%        { transform: scale(1);   opacity: 0.5; }
+  70%, 100% { transform: scale(1.9); opacity: 0; }
+}
+
+.flutuante-dica {
+  position: absolute;
+  right: calc(100% + 0.6rem);
+  top: 50%;
+  z-index: 3;
+  padding: 0.45rem 0.7rem;
+  background: var(--carvao);
+  color: var(--offwhite);
+  font: 400 0.6rem var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(0.4rem);
+  transition: opacity 0.25s, transform 0.25s var(--curva);
+}
+.flutuante:hover .flutuante-dica,
+.flutuante:focus-visible .flutuante-dica {
+  opacity: 1;
+  transform: translateY(-50%);
+}
+
+/* Onde não existe hover, a dica nunca apareceria — e ocupa espaço à toa. */
+@media (hover: none) {
+  .flutuante-dica { display: none; }
+}
+
+@media (min-width: 760px) {
+  .flutuante { width: 3.25rem; height: 3.25rem; }
+  .flutuante svg { width: 1.6rem; height: 1.6rem; }
+}
+
+/* ============================================================
    RODAPÉ
    ============================================================ */
 

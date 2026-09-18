@@ -117,6 +117,12 @@ function atualizaBarra() {
   const barra = $('#barra');
   if (barra) barra.classList.toggle('encostada', barra.getBoundingClientRect().top <= 0);
 
+  // Os atalhos flutuantes entram quando a capa já saiu da tela.
+  const flutuantes = $('#flutuantes');
+  if (flutuantes && !flutuantes.hidden) {
+    flutuantes.classList.toggle('mostra', rolado > window.innerHeight * 0.55);
+  }
+
   // A capa se afasta enquanto some: o conteúdo desbota antes de sair.
   const capa = $('.capa-interna');
   if (capa && paralaxe.ativo) {
@@ -820,6 +826,38 @@ function ligaBusca() {
   ajusta();
 }
 
+/* ---------- atalhos flutuantes ----------
+   Os endereços saem do config.js. O que não estiver configurado não aparece:
+   é a mesma regra do botão de pedido (REQ-33) — melhor nenhum botão que um
+   botão que não abre conversa nenhuma. */
+
+function ligaFlutuantes() {
+  const caixa = $('#flutuantes');
+  const zap = $('#flutuante-whatsapp');
+  const insta = $('#flutuante-instagram');
+  if (!caixa) return;
+  let algum = false;
+
+  if (Regras.numeroConfigurado(CONFIG.WHATSAPP_NUMERO)) {
+    const recado = String(CONFIG.MENSAGEM_WHATSAPP_GERAL || '').trim();
+    zap.href = 'https://wa.me/' + CONFIG.WHATSAPP_NUMERO +
+      (recado ? '?text=' + encodeURIComponent(recado) : '');
+    zap.hidden = false;
+    algum = true;
+  }
+
+  // Aceita tanto "favna.3d" quanto "@favna.3d" — o arroba é o jeito como as
+  // pessoas escrevem, e não faz parte do endereço.
+  const usuario = String(CONFIG.INSTAGRAM_USUARIO || '').trim().replace(/^@/, '');
+  if (usuario) {
+    insta.href = 'https://instagram.com/' + encodeURIComponent(usuario);
+    insta.hidden = false;
+    algum = true;
+  }
+
+  caixa.hidden = !algum;
+}
+
 /* ---------- início ---------- */
 
 async function inicia() {
@@ -839,6 +877,7 @@ async function inicia() {
   window.addEventListener('popstate', aplicaHash);
 
   ligaBusca();
+  ligaFlutuantes();
 
   // Os planos de fundo da capa e do rodapé: o que anda mais depressa fica
   // mais longe, como numa vitrine com profundidade.
