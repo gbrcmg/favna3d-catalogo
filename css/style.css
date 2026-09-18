@@ -466,8 +466,8 @@ img { max-width: 100%; display: block; }
 
 .faixa-cores {
   position: relative;
-  margin: clamp(2.5rem, 8vw, 5rem) 0 0;
-  padding: clamp(2.25rem, 6vw, 3.5rem) 0 clamp(2rem, 5vw, 3rem);
+  margin: clamp(1.75rem, 5vw, 3rem) 0 0;
+  padding: clamp(1.5rem, 4vw, 2.25rem) 0 clamp(1.25rem, 3vw, 1.75rem);
   background: var(--breu);
   color: var(--offwhite);
   overflow: hidden;
@@ -490,7 +490,7 @@ img { max-width: 100%; display: block; }
   flex-direction: column;
   align-items: flex-start;
   gap: 0.6rem;
-  margin-bottom: clamp(1.75rem, 4vw, 2.5rem);
+  margin-bottom: clamp(1rem, 2.5vw, 1.4rem);
 }
 
 .cores-rotulo {
@@ -504,7 +504,7 @@ img { max-width: 100%; display: block; }
 .cores-nota {
   margin: 0;
   max-width: min(26rem, 100%);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: var(--texto-breu);
 }
 
@@ -534,8 +534,8 @@ img { max-width: 100%; display: block; }
 .trilho::-webkit-scrollbar { display: none; }
 .trilho > * { flex: 0 0 auto; scroll-snap-align: start; }
 
-.paleta { gap: clamp(1.5rem, 4vw, 2.75rem); }
-.paleta > .amostra { width: clamp(5rem, 20vw, 6.5rem); }
+.paleta { gap: clamp(1.1rem, 3vw, 2rem); }
+.paleta > .amostra { width: clamp(4.25rem, 17vw, 5.5rem); }
 
 .amostra {
   text-align: center;
@@ -548,9 +548,9 @@ img { max-width: 100%; display: block; }
    e só cresce. Uma definição de amostra, dois tamanhos. O seletor duplo
    vence o empate de especificidade com .cor-disco, declarado mais abaixo. */
 .amostra-disco.cor-disco {
-  width: clamp(3.25rem, 11vw, 4.25rem);
-  height: clamp(3.25rem, 11vw, 4.25rem);
-  margin: 0 auto 0.85rem;
+  width: clamp(2.5rem, 8.5vw, 3.25rem);
+  height: clamp(2.5rem, 8.5vw, 3.25rem);
+  margin: 0 auto 0.6rem;
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 0.14),
     0 10px 20px -12px rgb(0 0 0 / 0.8);
@@ -560,10 +560,12 @@ img { max-width: 100%; display: block; }
 
 .amostra-nome {
   margin: 0;
-  /* O nome ocupa 1 ou 2 linhas ("Ouro Envelhecido Silk"). Reservar as duas
-     mantém o acabamento alinhado na mesma linha em toda a fileira. */
-  min-height: 2.6em;
-  font-size: 0.82rem;
+  /* O nome mais comprido do catálogo ("Ouro Envelhecido Silk") ocupa três
+     linhas na largura atual da amostra. Reservar as três mantém o acabamento
+     na mesma linha em toda a fileira — sem isso, uma amostra desalinha todas
+     as outras. Cadastrar um nome mais longo que esse pede revisar este valor. */
+  min-height: 3.9em;
+  font-size: 0.78rem;
   line-height: 1.3;
   color: var(--offwhite);
 }
@@ -598,7 +600,7 @@ img { max-width: 100%; display: block; }
 .seta:hover { color: var(--terracota); border-color: var(--terracota); }
 
 /* Dentro da bandeja escura, a seta e a barra se invertem. */
-.faixa-cores { --seta-topo: clamp(1.4rem, 5vw, 2rem); }
+.faixa-cores { --seta-topo: clamp(1rem, 4vw, 1.5rem); }
 .faixa-cores .seta {
   border-color: var(--linha-breu);
   background: rgb(34 31 30 / 0.85);
@@ -616,7 +618,7 @@ img { max-width: 100%; display: block; }
 /* Barra de posição: diz onde você está na fileira sem precisar de 11
    bolinhas. Funciona para qualquer quantidade de cores. */
 .barra-posicao {
-  margin: clamp(1.25rem, 3vw, 1.75rem) max(var(--respiro), calc(50vw - var(--largura) / 2)) 0;
+  margin: clamp(0.85rem, 2vw, 1.25rem) max(var(--respiro), calc(50vw - var(--largura) / 2)) 0;
   height: 1px;
   background: var(--linha);
   overflow: hidden;
