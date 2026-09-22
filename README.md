@@ -262,6 +262,28 @@ Quem clica no flutuante ainda não escolheu peça nenhuma — por isso a mensage
 geral, separada da mensagem do pedido. Deixar `INSTAGRAM_USUARIO` em branco
 esconde o botão do Instagram; número de WhatsApp inválido esconde o outro.
 
+### 5. Google Analytics (opcional)
+
+```js
+GA_MEASUREMENT_ID: 'G-XXXXXXXXXX',
+```
+
+Como conseguir o ID: analytics.google.com → Admin → Fluxos de dados → o site
+`favna3d.com.br`. Em branco, a página não carrega o Analytics — mesma regra do
+WhatsApp e do Instagram acima.
+
+Com o ID preenchido, o site manda pageviews normais do GA4 e mais três eventos
+próprios do funil:
+
+| evento | quando dispara |
+|---|---|
+| `view_item` | abre o detalhe de uma peça |
+| `pedir_whatsapp` | clica em "Pedir pelo WhatsApp" dentro do detalhe |
+| `clique_flutuante` | clica no botão redondo de WhatsApp ou Instagram (parâmetro `canal`) |
+
+É o que mostra, no GA, quantas visitas viram uma peça x quantas de fato
+chegaram a clicar pra pedir — pageview sozinho não distingue isso.
+
 ---
 
 ## Testar no computador

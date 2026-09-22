@@ -919,6 +919,9 @@ function atualizaBotaoPedido(produto) {
   a.href = url;
   a.target = '_blank';
   a.rel = 'noopener';
+  a.addEventListener('click', () => medeEvento('pedir_whatsapp', {
+    item_id: produto.id, item_name: produto.nome, item_category: produto.categoria,
+  }));
 
   const rotulo = document.createElement('span');
   rotulo.textContent = 'Pedir pelo WhatsApp';
@@ -941,6 +944,7 @@ function abre(id) {
   if (!produto) return;
   estado.aberto = produto;
   focoAnterior = document.activeElement;
+  medeEvento('view_item', { item_id: produto.id, item_name: produto.nome, item_category: produto.categoria });
   desenhaDetalhe(produto);
   $('#detalhe').hidden = false;
   document.body.classList.add('travado');
@@ -1134,6 +1138,34 @@ function ligaFlutuantes() {
   }
 
   caixa.hidden = !algum;
+
+  if (!zap.hidden) zap.addEventListener('click', () => medeEvento('clique_flutuante', { canal: 'whatsapp' }));
+  if (!insta.hidden) insta.addEventListener('click', () => medeEvento('clique_flutuante', { canal: 'instagram' }));
+}
+
+/* ---------- medição (Google Analytics) ----------
+   Só sobe script de terceiro se houver ID em config.js — mesma regra dos
+   botões flutuantes: o que não estiver configurado, simplesmente não roda. */
+
+function ligaAnalytics() {
+  const id = String(CONFIG.GA_MEASUREMENT_ID || '').trim();
+  if (!id) return;
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id);
+  document.head.appendChild(script);
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function gtag() { dataLayer.push(arguments); };
+  gtag('js', new Date());
+  gtag('config', id);
+}
+
+/** Manda um evento pro Analytics — não quebra nada se ele não tiver carregado
+    (sem GA_MEASUREMENT_ID, ou script bloqueado por adblock). */
+function medeEvento(nome, parametros) {
+  if (typeof window.gtag === 'function') window.gtag('event', nome, parametros);
 }
 
 /* ---------- início ---------- */
@@ -1158,6 +1190,7 @@ async function inicia() {
 
   ligaBusca();
   ligaFlutuantes();
+  ligaAnalytics();
 
   // Os planos de fundo da capa e do rodapé: o que anda mais depressa fica
   // mais longe, como numa vitrine com profundidade.

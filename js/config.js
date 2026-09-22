@@ -46,7 +46,16 @@ const CONFIG = {
   INSTAGRAM_USUARIO: 'favna.3d',
 
 
-  /* ---- 4. Ajustes finos ------------------------------------ */
+  /* ---- 4. Medição ------------------------------------------- */
+
+  // Measurement ID do Google Analytics (GA4), formato G-XXXXXXXXXX.
+  // Como conseguir: analytics.google.com > Admin > Fluxos de dados > o site.
+  // Em branco, a página não carrega o Analytics nem manda dado nenhum —
+  // mesma regra do WHATSAPP_NUMERO e do INSTAGRAM_USUARIO acima.
+  GA_MEASUREMENT_ID: 'G-BB3WN4WCV8',
+
+
+  /* ---- 5. Ajustes finos ------------------------------------ */
 
   // false = mostra só "Pronta entrega". true = mostra "Pronta entrega (3)".
   MOSTRAR_QUANTIDADE: false,
