@@ -7,7 +7,7 @@
 > Projeto Gálice, de onde este catálogo nasceu. Vale como contexto, não como regra.
 >
 > **No ar:** https://favna3d.com.br/ (domínio próprio; o endereço antigo do GitHub Pages redireciona)
-> Repositório: `gbrcmg/favna3d-catalogo` · Última revisão: 2026-09-19
+> Repositório: `gbrcmg/favna3d-catalogo` · Última revisão: 2026-09-22
 
 ## Como ler o status
 
@@ -30,7 +30,10 @@ WhatsApp. Sem carrinho, sem pagamento, sem login, sem painel.
 Quem mantém o catálogo **não é desenvolvedor**: editar a planilha tem que bastar.
 
 **Não-objetivos** (decididos, não esquecidos): carrinho multi-item, pagamento
-online, login, painel administrativo, integração com Shopee, contagem de visitas.
+online, login, painel administrativo, integração com Shopee.
+
+> ~~contagem de visitas~~ — revisto em 22/09/2026 por pedido do dono: entrou
+> Google Analytics (seção 10, REQ-80 a REQ-82). Ver [Decisão 14](#decisões).
 
 ---
 
@@ -193,6 +196,19 @@ cima disso, então o atraso que sobra é só o da republicação do lado do Goog
 | REQ-71 | As regras de negócio puras vivem em `js/regras.js`, isoladas do DOM, e têm teste automático em `testes/` | ✅ |
 | REQ-72 | Código, comentário e texto de interface em português do Brasil | 🟡 |
 | REQ-73 | A paleta e a tipografia vêm do `FAVNA_3D_Manual_de_Identidade_Visual_v2.md`, que tem prioridade sobre qualquer sugestão de design deste documento | ✅ |
+
+---
+
+## 10. Medição
+
+| ID | Requisito | Status |
+|---|---|---|
+| REQ-80 | Google Analytics (GA4) só carrega se `GA_MEASUREMENT_ID` estiver preenchido em `config.js` — mesma regra do WhatsApp e do Instagram (REQ-33): nada de terceiro sobe sem essa linha | ✅ |
+| REQ-81 | Além do pageview automático do GA4, três eventos próprios do funil: `view_item` (abre o detalhe de uma peça), `pedir_whatsapp` (clica no botão de pedido) e `clique_flutuante` (clica no WhatsApp/Instagram flutuante, parâmetro `canal`) | ✅ |
+| REQ-82 | `medeEvento()` não quebra a página se o `gtag` não tiver carregado (sem ID configurado, ou script bloqueado por adblock) | ✅ |
+
+Não há política de privacidade publicada mencionando o Analytics — pendência
+12 (ver abaixo).
 
 ---
 
@@ -362,6 +378,15 @@ testar derrubando a rede de propósito.
    servidor — terá de ser revista.** A ferramenta de envio (`r2`) e a credencial
    ficam fora deste repositório (REQ-12).
 
+14. **Não-objetivo "contagem de visitas" revisto em 22/09/2026, a pedido do
+   dono.** Entrou Google Analytics (GA4), condicionado a `GA_MEASUREMENT_ID`
+   em `config.js` — o mesmo interruptor que já existia para WhatsApp e
+   Instagram (REQ-33): sem ID preenchido, nenhum script de terceiro sobe e
+   nenhum dado sai do navegador. Junto vieram três eventos de funil (REQ-81),
+   não só pageview — é a métrica que separa "viu a peça" de "clicou pra
+   pedir", que sem evento nenhum contador de visita bruto não mostra. Ficou
+   pendente a política de privacidade mencionando o Analytics (pendência 12).
+
 ---
 
 ## Pendências com os donos
@@ -381,6 +406,7 @@ Nada aqui é código — são decisões e conteúdo que só vocês têm.
 | 9 | ~~Direito de imagem das fotos do criador~~ — **decidido em 19/09/2026**: não trava mais | REQ-13 revisto |
 | 10 | **Ligar o site às fotos do R2** — exige URL pública, e as três saídas custam algo: bucket público separado em `r2.dev` (limitado em taxa, sem cache), domínio próprio (mover o DNS para a Cloudflare) ou um Worker na frente do bucket privado (uma peça a mais para manter). Enquanto o repositório servir bem, não há ganho visível | REQ-01 para foto (trocar foto sem commit) e o app server |
 | 11 | **Duas fotos no ar passam de 300 KB**: `porta-escovas-canelado/01.jpg` (463 KB) e `porta-capsulas-onda/01.jpg` (316 KB). Reprocessar pelo `preparar-foto.py` e reenviar ao R2 | REQ-21b |
+| 12 | **Política de privacidade mencionando o Google Analytics** (LGPD) — o site não tem página nenhuma sobre isso ainda | Nenhum REQ trava por causa disso; é diligência, não bloqueio técnico |
 
 ### Pendência 9 — encerrada em 19/09/2026
 
