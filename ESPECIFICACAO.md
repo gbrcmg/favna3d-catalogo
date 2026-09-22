@@ -7,7 +7,7 @@
 > Projeto Gálice, de onde este catálogo nasceu. Vale como contexto, não como regra.
 >
 > **No ar:** https://favna3d.com.br/ (domínio próprio; o endereço antigo do GitHub Pages redireciona)
-> Repositório: `gbrcmg/favna3d-catalogo` · Última revisão: 2026-09-12
+> Repositório: `gbrcmg/favna3d-catalogo` · Última revisão: 2026-09-19
 
 ## Como ler o status
 
@@ -44,7 +44,7 @@ impressora. **Ela nunca é publicada nem referenciada pelo site.**
 | REQ-10 | Não aparecem no site, no repositório nem no CSV: cliente, custo, margem, lucro, percentual de divisão, dado de caixa, link de modelo (Patreon/Printables) e observação interna | 🟡 |
 | REQ-11 | A publicação no Sheets é **só da aba `Catalogo`** — "Documento inteiro" exporia a aba `_estoque` e, por ela, a planilha principal | ✅ |
 | REQ-12 | O repositório público contém **apenas** `catalogo/`. Nada da raiz `favna3d/` pode entrar: lá vivem uma credencial de sessão, a planilha de gestão e 19 GB de acervo pago | ✅ |
-| REQ-13 | Toda foto publicada é da FAVNA ou tem uso autorizado. Imagem feita pelo **criador do modelo** não vai ao ar como se fosse nossa | ⬜ |
+| REQ-13 | **Revisto em 19/09/2026 por decisão do dono.** O portão da foto deixou de ser *de quem é* e passou a ser *está pronta para publicar*. Toda imagem que chega em `<peça>/fotos/` é considerada liberada pelo dono — ou já vem pronta, ou é gerada antes. A liberação é responsabilidade dele, não do funil, e o funil não trava mais por autoria | ✅ |
 | REQ-14 | Foto de catálogo do **fornecedor de filamento** também não vai ao ar. A cor dela é extraída como dado; a foto fica em `assets/cores/`, fora deste repositório | ✅ |
 | REQ-21b | Foto publicada tem no máximo 1400 px no maior lado e 300 KB. `scripts/preparar-foto.py` garante — uma foto crua de celular tem 3,8 MB e inutilizaria a página em 4G fraco (REQ-56) | ✅ |
 
@@ -52,9 +52,10 @@ impressora. **Ela nunca é publicada nem referenciada pelo site.**
 > viva. Ver [Decisão 7](#decisões). Cumprido pelo `.gitignore` e auditado com
 > `git diff --cached --name-only` antes do primeiro commit.
 >
-> **REQ-13 bloqueia a publicação.** Hoje 11 das 25 fotos vêm do acervo do criador
-> **deltaprints** (Patreon) — são as fotos *dele* dos modelos, não peças nossas
-> fotografadas. Ver [pendência 9](#pendências-com-os-donos).
+> **REQ-13 não bloqueia mais** (decisão do dono, 19/09/2026). Parte das fotos vem
+> do acervo do criador **deltaprints** (Patreon), e isso deixou de ser impedimento:
+> ou a foto já vem pronta para publicação, ou é gerada antes de ir ao ar. Quem
+> libera é o dono. Ver [pendência 9](#pendências-com-os-donos), encerrada.
 
 ---
 
@@ -94,6 +95,7 @@ O site lê uma aba publicada como CSV. Colunas e semântica no
 | REQ-25 | Detalhe da peça com todas as fotos, descrição, cores, ficha técnica e botão de pedido | 🟡 |
 | REQ-26 | `fotos` aceita caminho relativo, URL completa e link do Google Drive — este convertido para `thumbnail?id=<ID>&sz=w1000` | ✅ |
 | REQ-27b | As fotos moram em `fotos/<slug>/NN.jpg` — uma pasta por peça. A pasta carrega a identidade, o arquivo carrega só a ordem, e dá para guardar alternativas junto da peça sem poluir o que vai ao ar | ✅ |
+| REQ-27c | Toda foto de `fotos/` tem **cópia idêntica** num bucket privado do Cloudflare R2, com o mesmo layout: `catalogo/<slug>/NN.jpg`. O site **não lê** do R2 — continua servindo do repositório (REQ-27b). A cópia é armazenamento-mestre e backup, e a base de um futuro app server (Decisão 13). Conferência: `r2 sync fotos catalogo`, sem `--yes`, termina em `0 novo(s), 0 alterado(s)` | 🟡 |
 | REQ-27 | Foto ausente ou quebrada vira placeholder neutro, sem quebrar o layout. Toda imagem tem `loading="lazy"` e `alt` com o nome da peça | 🟡 |
 | REQ-28 | A **ficha técnica** (`specs`) aparece em mono/Cinza Titânio sobre a foto — é o elemento marcante do design. Desde 14/09/2026 traz **só a dimensão** (`120 × 112 × 98 mm`): material, altura de camada e peso saíram, por decisão do dono. Desde 17/09/2026 ela é permanente no celular e surge no hover onde existe ponteiro fino, para não competir com a foto na grade | 🟡 |
 | REQ-29 | Preço formatado com `Intl.NumberFormat('pt-BR', BRL)` | ✅ |
@@ -344,6 +346,21 @@ testar derrubando a rede de propósito.
 12. **Página de categoria é rota de hash, não arquivo HTML.** Arquivo separado
    duplicaria cabeçalho, Open Graph, o fetch do CSV e o catálogo de cores — e
    cada peça publicada custaria manutenção em dois lugares (REQ-70, REQ-56).
+13. **As fotos ganharam cópia num bucket privado do R2 (19/09/2026), mas o site
+   continua servindo do repositório** (REQ-27c). O dono pretende ter um app
+   server próprio que busque as imagens; o R2 é a base dele. O bucket é
+   **privado** de propósito, por três motivos:
+   - `r2.dev`, o endereço público grátis, é limitado em taxa e a Cloudflare o
+     desaconselha em produção — pesa contra o REQ-56;
+   - domínio próprio no R2 exige o DNS de `favna3d.com.br` na Cloudflare, e hoje
+     ele está na Hostinger: mover é risco para o site no ar;
+   - bucket privado não publica as fotos do criador (REQ-13, pendência 9).
+
+   O custo dessa escolha: o navegador não consegue ler o R2, então o frontend não
+   usa esses objetos ainda (pendência 10). Quando o app server existir, ele lê do
+   R2 com credencial própria (só leitura) e **a Decisão 1 — site estático, sem
+   servidor — terá de ser revista.** A ferramenta de envio (`r2`) e a credencial
+   ficam fora deste repositório (REQ-12).
 
 ---
 
@@ -361,9 +378,15 @@ Nada aqui é código — são decisões e conteúdo que só vocês têm.
 | 6 | Foto real do Cachepô Curva — a atual é recorte de post, 432×541 | REQ-20 |
 | 7 | **Consignado conta como pronta entrega?** A aba 📦 Estoque soma as peças que estão nas lojas parceiras | REQ-21: pode prometer pronta entrega do que está na loja de outro |
 | 8 | `specs` das outras 9 peças | REQ-28: o elemento de design aparece em 5 de 14 |
-| 9 | **🚩 Direito de imagem das fotos do criador** — decidir antes de publicar | REQ-13: trava a Fase 3 |
+| 9 | ~~Direito de imagem das fotos do criador~~ — **decidido em 19/09/2026**: não trava mais | REQ-13 revisto |
+| 10 | **Ligar o site às fotos do R2** — exige URL pública, e as três saídas custam algo: bucket público separado em `r2.dev` (limitado em taxa, sem cache), domínio próprio (mover o DNS para a Cloudflare) ou um Worker na frente do bucket privado (uma peça a mais para manter). Enquanto o repositório servir bem, não há ganho visível | REQ-01 para foto (trocar foto sem commit) e o app server |
+| 11 | **Duas fotos no ar passam de 300 KB**: `porta-escovas-canelado/01.jpg` (463 KB) e `porta-capsulas-onda/01.jpg` (316 KB). Reprocessar pelo `preparar-foto.py` e reenviar ao R2 | REQ-21b |
 
-### Pendência 9 em detalhe
+### Pendência 9 — encerrada em 19/09/2026
+
+> **Decisão do dono:** parar de tratar a autoria da foto como portão. As fotos que
+> entram no funil já vêm prontas para publicação, ou são geradas antes. O registro
+> abaixo fica como histórico do que motivou a discussão.
 
 Cinco peças estão no catálogo com as fotos **do criador do modelo** (deltaprints,
 Patreon), não com fotos nossas:
@@ -409,3 +432,4 @@ locais, mas **não deve ir para o GitHub Pages**.
 | 2 | POC ponta a ponta: planilha real, CSV publicado | ✅ passou |
 | 3 | Publicação: repo próprio, GitHub Pages, og:image | ✅ no ar |
 | 4 | Só se pedido: QR code para as parceiras, pedido multi-item, domínio próprio | ⬜ |
+| 5 | App server próprio lendo as fotos do R2 (Decisão 13, pendência 10). Sem prazo; obriga a rever a Decisão 1 | ⬜ |

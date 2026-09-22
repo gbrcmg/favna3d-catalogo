@@ -58,6 +58,19 @@ Também funciona um link do Google Drive — mas o arquivo precisa estar
 compartilhado como "qualquer pessoa com o link". O site converte o endereço
 sozinho. Foto do repositório é mais confiável e carrega mais rápido.
 
+**Cópia de segurança no R2.** Depois de pôr a foto em `fotos/`, envie a cópia para o
+bucket privado do Cloudflare R2 (REQ-27c):
+
+```
+r2 sync catalogo/fotos catalogo          # só mostra o que enviaria
+r2 sync catalogo/fotos catalogo --yes    # envia
+```
+
+Ele compara o conteúdo e só manda o que está novo ou mudou. O site **não lê** do R2:
+as fotos continuam saindo do repositório, e a cópia serve de backup e de base para um
+futuro servidor próprio. A ferramenta `r2` e a credencial ficam na máquina do dono,
+**fora deste repositório**.
+
 ### A seção de cores
 
 A página tem uma faixa de cores **antes da lista de peças**, com todo o catálogo
@@ -308,7 +321,7 @@ index.html              a página
 css/style.css           visual (paleta e tipografia do Manual de Identidade v2)
 js/config.js            ← o único arquivo que se mexe no dia a dia
 js/app.js               a lógica: lê o CSV e monta a página
-fotos/                  fotos das peças
+fotos/                  fotos das peças (com cópia num bucket privado do R2)
 dados/exemplo.csv       cópia local pra testar sem internet
 dados/modelo_catalogo.csv  o que importar na planilha nova
 ```
